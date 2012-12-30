@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -23,6 +24,8 @@ namespace forex_arbitrage
     public partial class MainWindow : Window
     {
         private Tws m_tws = new Tws();
+        private Task m_task;
+        private CancellationTokenSource m_taskToken = new CancellationTokenSource();
 
         public MainWindow()
         {
@@ -50,9 +53,7 @@ namespace forex_arbitrage
                 m_tws.connect(win.Host, win.Port, win.ClientId);
                 if (m_tws.serverVersion > 0)
                 {
-                    Status("Connected to TWS server version " + m_tws.serverVersion + " at " + m_tws.TwsConnectionTime);
-                    myGrid.Visibility = Visibility.Visible;
-                    networkStatus.Text = "Online";
+                    Connected();
                 }
                 else
                 {
@@ -61,15 +62,24 @@ namespace forex_arbitrage
             }
         }
 
+        private void WhileConnectedTick()
+        {
+            while (m_tws.serverVersion > 0)
+            {
+
+                Thread.Sleep(50);
+            }
+
+            m_taskToken.Cancel();
+            Disconnected(false);
+        }
+
         private void File_Disconnect_Clicked(object sender, RoutedEventArgs e)
         {
-            myGrid.Visibility = Visibility.Hidden;
-            networkStatus.Text = "Offline";
 
             if (m_tws.serverVersion > 0)
             {
                 m_tws.disconnect();
-                Status("Disconnected from TWS server.");
             }
             else
             {
@@ -82,18 +92,53 @@ namespace forex_arbitrage
             Close();
         }
 
+        private void Disconnected(bool error)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                myGrid.Visibility = Visibility.Hidden;
+                networkStatus.Text = "Offline";
+                if (!error) Status("Disconnected from TWS server.");
+                else StatusError("Disconnected from TWS server.");
+            });
+        }
+
+        private void Connected()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                Status("Connected to TWS server version " + m_tws.serverVersion + " at " + m_tws.TwsConnectionTime);
+                myGrid.Visibility = Visibility.Visible;
+                networkStatus.Text = "Online";
+
+                if (m_task != null)
+                {
+                    m_taskToken.Cancel();
+                    m_taskToken = new CancellationTokenSource();
+                }
+
+                m_task = Task.Factory.StartNew(WhileConnectedTick, m_taskToken.Token);
+            });
+        }
+
         private void Status(String value)
         {
-            generalStatus.Foreground = Brushes.Black;
-            generalStatus.Text = value;
-            Log.Info(value);
+            Dispatcher.Invoke(() =>
+            {
+                generalStatus.Foreground = Brushes.Black;
+                generalStatus.Text = value;
+                Log.Info(value);
+            });
         }
 
         private void StatusError(String value)
         {
-            generalStatus.Foreground = Brushes.Red;
-            generalStatus.Text = value;
-            Log.Error(value);
+            Dispatcher.Invoke(() =>
+            {
+                generalStatus.Foreground = Brushes.Red;
+                generalStatus.Text = value;
+                Log.Error(value);
+            });
         }
     }
 }
