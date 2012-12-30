@@ -60,7 +60,7 @@
                 <Label Grid.Row="2" Grid.Column="2" Content="." />
                 <Label Grid.Row="3" Grid.Column="3" Content="." />
                 <Label Grid.Row="4" Grid.Column="4" Content="." />
-                <fa:ForexTicker Grid.Row="2" Grid.Column="1" TickerPrice="1.2892^5" TickerPriceDelta="+7^5" />
+                <fa:ForexTicker x:Name="tick1" Grid.Row="2" Grid.Column="1" TickerPrice="1.2892^5" TickerPriceDelta="+7^5" />
                 <fa:ForexTicker Grid.Row="3" Grid.Column="1" TickerPrice="0.012780" TickerPriceDelta="+1" />
                 <fa:ForexTicker Grid.Row="4" Grid.Column="1" TickerPrice="1.0650" TickerPriceDelta="+14" />
                 <fa:ForexTicker Grid.Row="1" Grid.Column="2" TickerPrice="0.7750" TickerPriceDelta="-5" />

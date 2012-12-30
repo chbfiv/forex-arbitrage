@@ -16,6 +16,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using TWSLib;
 
+
 namespace forex_arbitrage
 {
     /// <summary>
@@ -31,6 +32,9 @@ namespace forex_arbitrage
         {
             InitializeComponent();
 
+            m_tws.tickPrice += m_tws_tickPrice;
+            m_tws.errMsg += m_tws_errMsg;
+
             //TODO: hack grid lines colors
             var T = Type.GetType("System.Windows.Controls.Grid+GridLinesRenderer, PresentationFramework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
 
@@ -41,6 +45,11 @@ namespace forex_arbitrage
             myGrid.ShowGridLines = true;
 
             myGrid.Visibility = Visibility.Hidden;
+        }
+
+        private void m_tws_errMsg(int id, int errorCode, string errorMsg)
+        {
+            StatusError(errorMsg + " [" + id + ":" + errorCode + "]");
         }
 
         private void File_Connect_Clicked(object sender, RoutedEventArgs e)
@@ -62,8 +71,36 @@ namespace forex_arbitrage
             }
         }
 
+        private void RequestMarketData(String symbol)
+        {
+            //Contract ctr = new Contract("AAPL");
+
+            /*This is the security type. Valid values are:
+STK
+OPT
+FUT
+IND
+FOP
+CASH
+BAG*/
+            //m_tws.reqMktData(++i, symbol, "FOX", String.Empty, 0, String.Empty, String.Empty, "SMART", "IDEALPRO", "USD", Contract.GENERIC_TICK_TAGS, 0);
+            //m_tws.reqMktData(++i, symbol, "FOP", String.Empty, 0, String.Empty, String.Empty, "SMART", "IDEALPRO", "USD", Contract.GENERIC_TICK_TAGS, 0);
+            m_tws.reqMktData2(++i, "USD.EUR", "CASH", "SMART", "IDEALPRO", "USD", Contract.GENERIC_TICK_TAGS, 0);
+            //m_tws.reqMktData(++i, symbol, "STK", String.Empty, 0, String.Empty, String.Empty, "SMART", "ISLAND", "USD", Contract.GENERIC_TICK_TAGS, 0);
+            
+        }
+
+        private void m_tws_tickPrice(int id, int tickType, double price, int canAutoExecute)
+        {
+            tick1.TickerPrice = price.ToString();
+        }
+
+        private int i = 0;
+
         private void WhileConnectedTick()
         {
+            RequestMarketData("EUR.USD");
+
             while (m_tws.serverVersion > 0)
             {
 
