@@ -33,7 +33,7 @@
         </Menu>
         <Viewbox Grid.Row="1" >
             <Grid x:Name="myGrid" ShowGridLines="True">
-                <Grid.RowDefinitions>
+               <!-- <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
@@ -72,6 +72,7 @@
                 <fa:ForexTicker Grid.Row="1" Grid.Column="4" TickerPrice="0.9390^0" TickerPriceDelta="-12^5" />
                 <fa:ForexTicker Grid.Row="2" Grid.Column="4" TickerPrice="1.2105^0" TickerPriceDelta="-10^0" />
                 <fa:ForexTicker Grid.Row="3" Grid.Column="4" TickerPrice="0.011999^0" TickerPriceDelta="-17" />
+                -->
             </Grid>
         </Viewbox>
         <StatusBar Grid.Row="2">
