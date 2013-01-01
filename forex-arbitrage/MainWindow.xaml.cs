@@ -15,10 +15,30 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using TWSLib;
+using Bluebit.MatrixLibrary;
+using MathNet.Numerics;
+using MathNet.Numerics.LinearAlgebra.Generic;
 
+using Matrix = Bluebit.MatrixLibrary.Matrix;
+using Vector = Bluebit.MatrixLibrary.Vector;
+using MathNet.Numerics.LinearAlgebra.Double;
+using MathNet.Numerics.LinearAlgebra.Double.Factorization;
 
 namespace forex_arbitrage
 {
+    public enum Operation_Type
+    {
+        Insert = 0,
+		Update = 1,
+		Delete = 2
+    }
+       
+    public enum side
+    {
+        ASK = 0,
+		BID = 1
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -28,14 +48,27 @@ namespace forex_arbitrage
         private Task m_task;
         private CancellationTokenSource m_taskToken = new CancellationTokenSource();
         private ForexTicker[,] m_tickers;
+        private Matrix m_a;
+        private Matrix m_b;
+        private Matrix m_c;
+        
+        private Matrix m_aTest = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
+        //private DenseMatrix m_aTest2 = new DenseMatrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
+        private Matrix m_bTest = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
+        private Matrix m_cTest = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
+        private Vector m_eigenValuesTest = new Vector(TEST_ARBITRAGE_SIZE);
 
         public const int NO_SECURITY_DEF_FOUND = 200;
+        public const int TEST_ARBITRAGE_SIZE = 6;
+        public const double LAMBDA_MAX = 6.0221;
 
         public MainWindow()
         {
             InitializeComponent();
 
             m_tws.tickPrice += m_tws_tickPrice;
+            m_tws.updateMktDepth += m_tws_updateMktDepth;
+            m_tws.updateMktDepthL2 += m_tws_updateMktDepthL2;
             m_tws.errMsg += m_tws_errMsg;
 
             //TODO: hack grid lines colors
@@ -48,6 +81,203 @@ namespace forex_arbitrage
             myGrid.ShowGridLines = true;
 
             myGrid.Visibility = Visibility.Hidden;
+
+            FillTestData();
+        }
+
+        private void FillTestData()
+        {
+            //Eigen values
+            m_eigenValuesTest[0] = 0.3802;
+            m_eigenValuesTest[1] = 0.5548;
+            m_eigenValuesTest[2] = 0.6881;
+            m_eigenValuesTest[3] = 0.0035;
+            m_eigenValuesTest[4] = 0.049;
+            m_eigenValuesTest[5] = 0.2678;
+
+            //A
+            m_aTest[0, 0] = 1;
+            m_aTest[0, 1] = 0.685636;
+            m_aTest[0, 2] = 0.555772;
+            m_aTest[0, 3] = 108.18;
+            m_aTest[0, 4] = 7.8064;
+            m_aTest[0, 5] = 1.4247;
+
+            m_aTest[1, 0] = 1.459;
+            m_aTest[1, 1] = 1;
+            m_aTest[1, 2] = 0.8113;
+            m_aTest[1, 3] = 157.8017;
+            m_aTest[1, 4] = 11.3894;
+            m_aTest[1, 5] = 2.0789;
+
+            m_aTest[2, 0] = 1.7998;
+            m_aTest[2, 1] = 1.233198;
+            m_aTest[2, 2] = 1;
+            m_aTest[2, 3] = 200.35;
+            m_aTest[2, 4] = 14.11;
+            m_aTest[2, 5] = 2.5657;
+
+            m_aTest[3, 0] = 0.009248;
+            m_aTest[3, 1] = 0.00634;
+            m_aTest[3, 2] = 0.005199;
+            m_aTest[3, 3] = 1;
+            m_aTest[3, 4] = 0.074129;
+            m_aTest[3, 5] = 0.013217;
+
+            m_aTest[4, 0] = 0.128116;
+            m_aTest[4, 1] = 0.087828;
+            m_aTest[4, 2] = 0.070947;
+            m_aTest[4, 3] = 14.35;
+            m_aTest[4, 4] = 1;
+            m_aTest[4, 5] = 0.182582;
+
+            m_aTest[5, 0] = 0.702395;
+            m_aTest[5, 1] = 0.481348;
+            m_aTest[5, 2] = 0.389757;
+            m_aTest[5, 3] = 77.32;
+            m_aTest[5, 4] = 5.4845;
+            m_aTest[5, 5] = 1;
+
+            /*
+            //A2
+            m_aTest2[0, 0] = 1;
+            m_aTest2[0, 1] = 0.685636;
+            m_aTest2[0, 2] = 0.555772;
+            m_aTest2[0, 3] = 108.18;
+            m_aTest2[0, 4] = 7.8064;
+            m_aTest2[0, 5] = 1.4247;
+
+            m_aTest2[1, 0] = 1.459;
+            m_aTest2[1, 1] = 1;
+            m_aTest2[1, 2] = 0.8113;
+            m_aTest2[1, 3] = 157.8017;
+            m_aTest2[1, 4] = 11.3894;
+            m_aTest2[1, 5] = 2.0789;
+
+            m_aTest2[2, 0] = 1.7998;
+            m_aTest2[2, 1] = 1.233198;
+            m_aTest2[2, 2] = 1;
+            m_aTest2[2, 3] = 200.35;
+            m_aTest2[2, 4] = 14.11;
+            m_aTest2[2, 5] = 2.5657;
+
+            m_aTest2[3, 0] = 0.009248;
+            m_aTest2[3, 1] = 0.00634;
+            m_aTest2[3, 2] = 0.005199;
+            m_aTest2[3, 3] = 1;
+            m_aTest2[3, 4] = 0.074129;
+            m_aTest2[3, 5] = 0.013217;
+
+            m_aTest2[4, 0] = 0.128116;
+            m_aTest2[4, 1] = 0.087828;
+            m_aTest2[4, 2] = 0.070947;
+            m_aTest2[4, 3] = 14.35;
+            m_aTest2[4, 4] = 1;
+            m_aTest2[4, 5] = 0.182582;
+
+            m_aTest2[5, 0] = 0.702395;
+            m_aTest2[5, 1] = 0.481348;
+            m_aTest2[5, 2] = 0.389757;
+            m_aTest2[5, 3] = 77.32;
+            m_aTest2[5, 4] = 5.4845;
+            m_aTest2[5, 5] = 1;
+            */
+
+            //B
+            m_bTest[0, 0] = 1;
+            m_bTest[0, 1] = 1111;
+            m_bTest[0, 2] = 1111;
+            m_bTest[0, 3] = 1111;
+            m_bTest[0, 4] = 1111;
+            m_bTest[0, 5] = 1111;
+
+            m_bTest[1, 0] = 1111;
+            m_bTest[1, 1] = 1;
+            m_bTest[1, 2] = 1111;
+            m_bTest[1, 3] = 1111;
+            m_bTest[1, 4] = 1111;
+            m_bTest[1, 5] = 1111;
+
+            m_bTest[2, 0] = 1111;
+            m_bTest[2, 1] = 1111;
+            m_bTest[2, 2] = 1;
+            m_bTest[2, 3] = 1111;
+            m_bTest[2, 4] = 1111;
+            m_bTest[2, 5] = 1111;
+
+            m_bTest[3, 0] = 1111;
+            m_bTest[3, 1] = 1111;
+            m_bTest[3, 2] = 1111;
+            m_bTest[3, 3] = 1;
+            m_bTest[3, 4] = 1111;
+            m_bTest[3, 5] = 1111;
+
+            m_bTest[4, 0] = 1111;
+            m_bTest[4, 1] = 1111;
+            m_bTest[4, 2] = 1111;
+            m_bTest[4, 3] = 1111;
+            m_bTest[4, 4] = 1;
+            m_bTest[4, 5] = 1111;
+
+            m_bTest[5, 0] = 1111;
+            m_bTest[5, 1] = 1111;
+            m_bTest[5, 2] = 1111;
+            m_bTest[5, 3] = 1111;
+            m_bTest[5, 4] = 1111;
+            m_bTest[5, 5] = 1;
+
+            //C
+            m_cTest[0, 0] = 1;
+            m_cTest[0, 1] = 1111;
+            m_cTest[0, 2] = 1111;
+            m_cTest[0, 3] = 1111;
+            m_cTest[0, 4] = 1111;
+            m_cTest[0, 5] = 1111;
+
+            m_cTest[1, 0] = 1111;
+            m_cTest[1, 1] = 1;
+            m_cTest[1, 2] = 1111;
+            m_cTest[1, 3] = 1111;
+            m_cTest[1, 4] = 1111;
+            m_cTest[1, 5] = 1111;
+
+            m_cTest[2, 0] = 1111;
+            m_cTest[2, 1] = 1111;
+            m_cTest[2, 2] = 1;
+            m_cTest[2, 3] = 1111;
+            m_cTest[2, 4] = 1111;
+            m_cTest[2, 5] = 1111;
+
+            m_cTest[3, 0] = 1111;
+            m_cTest[3, 1] = 1111;
+            m_cTest[3, 2] = 1111;
+            m_cTest[3, 3] = 1;
+            m_cTest[3, 4] = 1111;
+            m_cTest[3, 5] = 1111;
+
+            m_cTest[4, 0] = 1111;
+            m_cTest[4, 1] = 1111;
+            m_cTest[4, 2] = 1111;
+            m_cTest[4, 3] = 1111;
+            m_cTest[4, 4] = 1;
+            m_cTest[4, 5] = 1111;
+
+            m_cTest[5, 0] = 1111;
+            m_cTest[5, 1] = 1111;
+            m_cTest[5, 2] = 1111;
+            m_cTest[5, 3] = 1111;
+            m_cTest[5, 4] = 1111;
+            m_cTest[5, 5] = 1;
+        }
+
+        private void m_tws_updateMktDepthL2(int id, int position, string marketMaker, int operation, int side, double price, int size)
+        {
+            
+        }
+
+        private void m_tws_updateMktDepth(int id, int position, int operation, int side, double price, int size)
+        {
+            
         }
 
         private void m_tws_errMsg(int id, int errorCode, string errorMsg)
@@ -87,9 +317,17 @@ namespace forex_arbitrage
             }
         }
 
+        private void File_Test_Clicked(object sender, RoutedEventArgs e)
+        {
+            CalulateTestArbitrage();
+        }        
+
         private void RequestMarketData(params string[] symbols)
         {
             m_tickers = new ForexTicker[symbols.Length, symbols.Length];
+            m_a = new Matrix(symbols.Length, symbols.Length); 
+            m_b = new Matrix(symbols.Length, symbols.Length);
+            m_c = new Matrix(symbols.Length, symbols.Length);
 
             myGrid.Children.Clear();
             myGrid.RowDefinitions.Clear();
@@ -161,18 +399,24 @@ BAG*/
             }
         }
 
-        private int k = 0;
-
         private void WhileConnectedTick()
         {
-            while (m_tws.serverVersion > 0)
+            try
             {
+                while (m_tws.serverVersion > 0)
+                {
+                    CalulateArbitrage();
 
-                Thread.Sleep(50);
+                    Thread.Sleep(50);
+                }
+
+                m_taskToken.Cancel();
+                Disconnected(false);
             }
-
-            m_taskToken.Cancel();
-            Disconnected(false);
+            catch (Exception ex)
+            {
+                StatusError(ex.Message);
+            }
         }
 
         private void File_Disconnect_Clicked(object sender, RoutedEventArgs e)
@@ -219,7 +463,8 @@ BAG*/
 
                 m_task = Task.Factory.StartNew(WhileConnectedTick, m_taskToken.Token);
 
-                RequestMarketData("USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD");
+                //RequestMarketData("USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD");
+                RequestMarketData("USD", "EUR", "JPY", "CHF");
             });
         }
 
@@ -241,6 +486,101 @@ BAG*/
                 generalStatus.Text = value;
                 Log.Error(value);
             });
+        }
+
+        private void CalulateArbitrage()
+        {
+            CalulateA();
+            CalulateB();
+            CalulateC();
+        }
+
+        private void CalulateTestArbitrage()
+        {
+            m_a = m_aTest.Clone(); ;
+            m_b = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
+            m_c = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
+
+            CalulateB();
+            CalulateC();
+        }
+
+        private void CalulateA()
+        {
+            if (!CanCalculateArbitrage()) return;
+            
+            Dispatcher.Invoke(() =>
+            {
+                for (int i = 0; i < m_tickers.GetLength(0); i++)
+                {
+                    for (int j = 0; j < m_tickers.GetLength(1); j++)
+                    {
+                        ForexTicker ticker = m_tickers[i, j];
+                        m_a[i, j] = ticker != null ? m_tickers[i, j].Price : 1.0d;
+                    }
+                }
+            });
+        }
+
+        /*
+              
+        //Evd temp2 = m_aTest2.Evd();
+        //double trace = m_aTest2.Trace();
+            
+        //Vector<System.Numerics.Complex> vals = temp2.EigenValues();
+
+        //SymEigen sym = new SymEigen(m_a);
+        //Vector ev = new Vector(eigenvalues.Length);
+             
+         for (int i = 0; i < eigenvalues.Length; i++)
+        {
+            ev[i] = eigenvalues[i].Real;                
+        }*/
+
+        private void CalulateB()
+        {
+            if (!CanCalculateArbitrage()) return;
+
+            Eigen eigen = new Eigen(m_a);
+
+            CMatrix ceVec = eigen.Eigenvectors;
+            CVector ceVal = eigen.Eigenvalues;
+
+            double lambdaMax = ceVal[0].Real;
+
+            Vector eVec = new Vector(ceVal.Length);
+
+            for (int i = 0; i < ceVal.Length; i++)
+            {
+                eVec[i] = ceVec[i, 0].Real;
+            }
+
+            for (int i = 0; i < m_a.Rows; i++)
+            {
+                for (int j = 0; j < m_a.Cols; j++)
+                {
+                    m_b[i, j] = eVec[i] / eVec[j];
+                    //m_b[i, j] = (m_eigenValuesTest[i] / m_eigenValuesTest[j]);
+                }
+            }
+        }
+
+        private void CalulateC()
+        {
+            if (!CanCalculateArbitrage()) return;
+
+            for (int i = 0; i < m_b.Rows; i++)
+            {
+                for (int j = 0; j < m_b.Cols; j++)
+                {
+                    m_c[i, j] = m_a[i, j] / m_b[i, j];
+                }
+            }
+        }
+
+        private bool CanCalculateArbitrage()
+        {
+            return m_a != null && m_b != null && m_c != null;
         }
     }
 }

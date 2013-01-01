@@ -23,6 +23,7 @@
             <MenuItem Header="_File">
                 <MenuItem Header="_Connect" Click="File_Connect_Clicked" />
                 <MenuItem Header="_Disconnect" Click="File_Disconnect_Clicked" />
+                <MenuItem Header="_Test" Click="File_Test_Clicked" />
                 <MenuItem Header="Exit" Click="File_Exit_Clicked" />
             </MenuItem>
             <MenuItem Header="_Edit">
