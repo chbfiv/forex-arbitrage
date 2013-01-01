@@ -490,22 +490,24 @@ BAG*/
 
         private void CalulateArbitrage()
         {
-            CalulateA();
-            CalulateB();
-            CalulateC();
+            CalculateA();
+            CalculateB();
+            CalculateC();
+            CalculateSD();
         }
 
         private void CalulateTestArbitrage()
         {
-            m_a = m_aTest.Clone(); ;
+            m_a = m_aTest.Clone();
             m_b = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
             m_c = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
 
-            CalulateB();
-            CalulateC();
+            CalculateB();
+            CalculateC();
+            CalculateSD();
         }
 
-        private void CalulateA()
+        private void CalculateA()
         {
             if (!CanCalculateArbitrage()) return;
             
@@ -537,35 +539,35 @@ BAG*/
             ev[i] = eigenvalues[i].Real;                
         }*/
 
-        private void CalulateB()
+        private void CalculateB()
         {
             if (!CanCalculateArbitrage()) return;
 
-            Eigen eigen = new Eigen(m_a);
+            Eigen aE = new Eigen(m_a);
 
-            CMatrix ceVec = eigen.Eigenvectors;
-            CVector ceVal = eigen.Eigenvalues;
+            CMatrix aECVec = aE.Eigenvectors;
+            CVector aECVal = aE.Eigenvalues;
 
-            double lambdaMax = ceVal[0].Real;
+            double aLambdaMax = aECVal[0].Real;
 
-            Vector eVec = new Vector(ceVal.Length);
+            Vector aEVec = new Vector(aECVal.Length);
 
-            for (int i = 0; i < ceVal.Length; i++)
+            for (int i = 0; i < aECVal.Length; i++)
             {
-                eVec[i] = ceVec[i, 0].Real;
+                aEVec[i] = aECVec[i, 0].Real;
             }
 
             for (int i = 0; i < m_a.Rows; i++)
             {
                 for (int j = 0; j < m_a.Cols; j++)
                 {
-                    m_b[i, j] = eVec[i] / eVec[j];
+                    m_b[i, j] = aEVec[i] / aEVec[j];
                     //m_b[i, j] = (m_eigenValuesTest[i] / m_eigenValuesTest[j]);
                 }
-            }
+            }            
         }
 
-        private void CalulateC()
+        private void CalculateC()
         {
             if (!CanCalculateArbitrage()) return;
 
@@ -578,9 +580,36 @@ BAG*/
             }
         }
 
+        private void CalculateSD()
+        {
+            int elements = m_c.Rows * m_c.Cols;
+            double sum = 0;
+            for (int i = 0; i < m_c.Rows; i++)
+            {
+                for (int j = 0; j < m_c.Cols; j++)
+                {
+                    sum += m_c[i, j];
+                }
+            }
+
+            double mean = sum / elements;
+
+            double sum2 = 0;
+            for (int i = 0; i < m_c.Rows; i++)
+            {
+                for (int j = 0; j < m_c.Cols; j++)
+                {
+                    sum2 += Math.Pow(m_c[i, j] - mean, 2);
+                }
+            }
+
+            double sd = Math.Sqrt(sum2 / elements);
+        }
+
+
         private bool CanCalculateArbitrage()
         {
-            return m_a != null && m_b != null && m_c != null;
+            return m_a != null && m_b != null && m_c != null && m_d != null;
         }
     }
 }
