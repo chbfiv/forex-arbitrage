@@ -44,6 +44,8 @@ namespace forex_arbitrage
     /// </summary>
     public partial class MainWindow : Window
     {
+        #region Fields
+
         private Tws m_tws = new Tws();
         private Task m_task;
         private CancellationTokenSource m_taskToken = new CancellationTokenSource();
@@ -61,6 +63,58 @@ namespace forex_arbitrage
         public const int NO_SECURITY_DEF_FOUND = 200;
         public const int TEST_ARBITRAGE_SIZE = 6;
         public const double LAMBDA_MAX = 6.0221;
+
+        #endregion
+
+        #region Properties
+
+        #endregion
+
+        #region Dependency Properties
+
+        public static readonly DependencyProperty MeanProperty =
+            DependencyProperty.Register("Mean", typeof(double),
+            typeof(MainWindow));
+
+        public double Mean
+        {
+            get { return (double)GetValue(MeanProperty); }
+            set { SetValue(MeanProperty, value); }
+        }
+
+        public static readonly DependencyProperty SDProperty =
+            DependencyProperty.Register("SD", typeof(double),
+            typeof(MainWindow));
+
+        public double SD
+        {
+            get { return (double)GetValue(SDProperty); }
+            set { SetValue(SDProperty, value); }
+        }
+
+        public static readonly DependencyProperty ALambdaMaxProperty =
+            DependencyProperty.Register("ALambdaMax", typeof(double),
+            typeof(MainWindow));
+
+        public double ALambdaMax
+        {
+            get { return (double)GetValue(ALambdaMaxProperty); }
+            set { SetValue(ALambdaMaxProperty, value); }
+        }
+
+        public static readonly DependencyProperty BLambdaMaxProperty =
+            DependencyProperty.Register("BLambdaMax", typeof(double),
+            typeof(MainWindow));
+
+        public double BLambdaMax
+        {
+            get { return (double)GetValue(BLambdaMaxProperty); }
+            set { SetValue(BLambdaMaxProperty, value); }
+        }
+
+        #endregion
+
+        #region Constructor
 
         public MainWindow()
         {
@@ -84,6 +138,10 @@ namespace forex_arbitrage
 
             FillTestData();
         }
+
+        #endregion
+
+        #region Members
 
         private void FillTestData()
         {
@@ -269,6 +327,7 @@ namespace forex_arbitrage
             m_cTest[5, 4] = 1111;
             m_cTest[5, 5] = 1;
         }
+
 
         private void m_tws_updateMktDepthL2(int id, int position, string marketMaker, int operation, int side, double price, int size)
         {
@@ -463,8 +522,8 @@ BAG*/
 
                 m_task = Task.Factory.StartNew(WhileConnectedTick, m_taskToken.Token);
 
-                //RequestMarketData("USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD");
-                RequestMarketData("USD", "EUR", "JPY", "CHF");
+                RequestMarketData("USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD");
+                //RequestMarketData("USD", "EUR", "JPY", "CHF");
             });
         }
 
@@ -494,6 +553,7 @@ BAG*/
             CalculateB();
             CalculateC();
             CalculateSD();
+            CalculateShortestPath();
         }
 
         private void CalulateTestArbitrage()
@@ -505,6 +565,7 @@ BAG*/
             CalculateB();
             CalculateC();
             CalculateSD();
+            CalculateShortestPath();
         }
 
         private void CalculateA()
@@ -517,8 +578,9 @@ BAG*/
                 {
                     for (int j = 0; j < m_tickers.GetLength(1); j++)
                     {
-                        ForexTicker ticker = m_tickers[i, j];
-                        m_a[i, j] = ticker != null ? m_tickers[i, j].Price : 1.0d;
+                        ForexTicker tickerLeft = m_tickers[i, j];
+                        ForexTicker tickerRight = m_tickers[j, i];
+                        m_a[i, j] = tickerLeft != null && tickerRight != null ? tickerLeft.Price : 1;
                     }
                 }
             });
@@ -564,7 +626,20 @@ BAG*/
                     m_b[i, j] = aEVec[i] / aEVec[j];
                     //m_b[i, j] = (m_eigenValuesTest[i] / m_eigenValuesTest[j]);
                 }
-            }            
+            }
+
+            Eigen bE = new Eigen(m_b);
+
+            CMatrix bECVec = bE.Eigenvectors;
+            CVector bECVal = bE.Eigenvalues;
+
+            double bLambdaMax = bECVal[0].Real;
+
+            Dispatcher.Invoke(() =>
+            {
+                ALambdaMax = Math.Round(aLambdaMax, 5);
+                BLambdaMax = Math.Round(bLambdaMax, 5);
+            });
         }
 
         private void CalculateC()
@@ -604,13 +679,49 @@ BAG*/
             }
 
             double sd = Math.Sqrt(sum2 / elements);
+
+            Dispatcher.Invoke(() =>
+            {
+                Mean = Math.Round(mean, 5);
+                SD = Math.Round(sd, 5);
+            });
+        }
+
+        private void CalculateShortestPath()
+        {
+            EdgeWeightedDigraph G = new EdgeWeightedDigraph(m_a.Rows);
+            for (int v = 0; v < m_a.Rows; v++)
+            {
+                for (int w = 0; w < m_a.Cols; w++)
+                {
+                    DirectedEdge e = new DirectedEdge(v, w, -Math.Log(m_a[v, w]));
+                    G.addEdge(e);
+                }
+            }
+
+            BellmanFordSP spt = new BellmanFordSP(G, 0);
+            if (spt.hasNegativeCycle)
+            {
+                double stake = 1000;
+
+                foreach (DirectedEdge e in spt.negativeCycle)
+                {
+                    stake *= Math.Exp(-e.Weight);
+                }
+            }
+            else
+            {
+                StatusError("no arbitrage opportunity");
+            }
         }
 
 
         private bool CanCalculateArbitrage()
         {
-            return m_a != null && m_b != null && m_c != null && m_d != null;
+            return m_a != null && m_b != null && m_c != null;
         }
+
+        #endregion
     }
 }
 

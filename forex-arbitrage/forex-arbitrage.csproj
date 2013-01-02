@@ -67,6 +67,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="EdgeWeightedDirectedCycle.cs" />
+    <Compile Include="BellmanFordSP.cs" />
+    <Compile Include="EdgeWeightedDigraph.cs" />
     <Page Include="ConnectWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -87,6 +90,7 @@
     <Compile Include="ConnectWindow.xaml.cs">
       <DependentUpon>ConnectWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="DirectedEdge.cs" />
     <Compile Include="ForexTicker.xaml.cs">
       <DependentUpon>ForexTicker.xaml</DependentUpon>
     </Compile>
