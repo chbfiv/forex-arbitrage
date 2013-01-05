@@ -28,6 +28,8 @@ namespace forex_arbitrage
         #region Fields
 
         private List<DirectedEdge> m_edges = new List<DirectedEdge>();
+        private DateTime m_origin = DateTime.Now;        
+        private DateTime m_current = DateTime.Now;        
 
         #endregion
 
@@ -62,6 +64,21 @@ namespace forex_arbitrage
             }
         }
 
+        public DateTime Origin
+        {
+            get { return m_origin; }
+        }
+
+        public DateTime Current
+        {
+            get { return m_current; }
+            set { m_current = value; }
+        }
+
+        public TimeSpan LifeTime
+        {
+            get { return m_current - m_origin; }
+        }
 
         public double Profit
         {
@@ -93,8 +110,9 @@ namespace forex_arbitrage
 
         #region Constructors
 
-        public ArbitrageCycle(params DirectedEdge[] edges)
+        public ArbitrageCycle(DateTime origin, params DirectedEdge[] edges)
         {
+            m_origin = origin;
             foreach (DirectedEdge edge in edges)
             {
                 m_edges.Add(edge);
@@ -103,13 +121,14 @@ namespace forex_arbitrage
 
         public ArbitrageCycle(ArbitrageCycle cycle)
         {
+            m_origin = cycle.Origin;
             DirectedEdge[] temp = cycle.Edges.Select(item => (DirectedEdge)item).ToArray();
             m_edges = new List<DirectedEdge>(temp);
         }
 
         #endregion
 
-        #region Members}
+        #region Members
 
         public void Add(DirectedEdge edge)
         {

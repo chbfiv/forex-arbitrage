@@ -61,6 +61,10 @@ namespace forex_arbitrage
         private Matrix m_cTest = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
         private Vector m_eigenValuesTest = new Vector(TEST_ARBITRAGE_SIZE);
 
+        private ArbitrageCycleComparer ARBITRAGE_CYCLE_COMPARER = new ArbitrageCycleComparer();
+        private SortedSet<ArbitrageCycle> m_activeArbitrage = new SortedSet<ArbitrageCycle>();
+        private SortedSet<ArbitrageCycle> m_historicalArbitrage = new SortedSet<ArbitrageCycle>();
+
         public const int NO_SECURITY_DEF_FOUND = 200;
         public const int TEST_ARBITRAGE_SIZE = 6;
         public const double LAMBDA_MAX = 6.0221;
@@ -125,6 +129,7 @@ namespace forex_arbitrage
             m_tws.updateMktDepth += m_tws_updateMktDepth;
             m_tws.updateMktDepthL2 += m_tws_updateMktDepthL2;
             m_tws.errMsg += m_tws_errMsg;
+            m_tws.currentTime += m_tws_currentTime;
 
             //TODO: hack grid lines colors
             var T = Type.GetType("System.Windows.Controls.Grid+GridLinesRenderer, PresentationFramework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35");
@@ -138,6 +143,15 @@ namespace forex_arbitrage
             myGrid.Visibility = Visibility.Hidden;
 
             FillTestData();
+        }
+
+        private DateTime m_currentTime = DateTime.Now;
+
+        private void m_tws_currentTime(int time)
+        {
+            m_currentTime = new DateTime(time);
+            m_currentTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            m_currentTime = m_currentTime.AddSeconds(time).ToLocalTime();
         }
 
         #endregion
@@ -328,7 +342,6 @@ namespace forex_arbitrage
             m_cTest[5, 5] = 1;
         }
 
-
         private void m_tws_updateMktDepthL2(int id, int position, string marketMaker, int operation, int side, double price, int size)
         {
             
@@ -470,6 +483,7 @@ BAG*/
             {
                 while (m_tws.serverVersion > 0)
                 {
+                    m_tws.reqCurrentTime();
                     CalulateArbitrage();
 
                     Thread.Sleep(50);
@@ -553,6 +567,15 @@ BAG*/
             });
         }
 
+        private bool CanCalculateArbitrage()
+        {
+            return m_a != null && m_b != null && m_c != null;
+        }
+
+        #endregion
+
+        #region Arbitrage A/B/C/SD
+
         private void CalulateArbitrage()
         {
             CalculateA();
@@ -593,21 +616,6 @@ BAG*/
                 }
             });
         }
-
-        /*
-              
-        //Evd temp2 = m_aTest2.Evd();
-        //double trace = m_aTest2.Trace();
-            
-        //Vector<System.Numerics.Complex> vals = temp2.EigenValues();
-
-        //SymEigen sym = new SymEigen(m_a);
-        //Vector ev = new Vector(eigenvalues.Length);
-             
-         for (int i = 0; i < eigenvalues.Length; i++)
-        {
-            ev[i] = eigenvalues[i].Real;                
-        }*/
 
         private void CalculateB()
         {
@@ -695,8 +703,9 @@ BAG*/
             });
         }
 
-        private ArbitrageCycleComparer ARBITRAGE_CYCLE_COMPARER = new ArbitrageCycleComparer();
-        private SortedSet<ArbitrageCycle> m_history = new SortedSet<ArbitrageCycle>();
+        #endregion
+
+        #region Arbitrage ShortestPath/Historical
 
         private void CalculateShortestPath()
         {
@@ -716,21 +725,8 @@ BAG*/
             {
                 double stake = 25000;
                 double arbitrage = 1;
-                
-                /*//int[] list = spt.Queue.ToArray();
-                int[] list = new int[] { 1, 3, 0 };
-                for (int i = 0; i <= list.Length; i++)
-                {
-                    if (i == 0) continue;
-                    int vp = list[i - 1];
-                    int v = i == list.Length ? list[0] : list[i];
 
-                    double weight = m_a[vp, v];
-                    Status("from(" + vp + ") to(" + v + ") weight(" + weight + ")");
-                    arbitrage *= weight;
-                }*/
-
-                ArbitrageCycle cycle = new ArbitrageCycle();
+                ArbitrageCycle cycle = new ArbitrageCycle(m_currentTime);
                 
                 foreach (DirectedEdge e in spt.negativeCycle)
                 {
@@ -740,9 +736,9 @@ BAG*/
                     cycle.Edges.Add(new DirectedEdge(e.From, e.To, weight));
                 }
 
-                if (!m_history.Contains(cycle, ARBITRAGE_CYCLE_COMPARER))
+                if (!m_activeArbitrage.Contains(cycle, ARBITRAGE_CYCLE_COMPARER))
                 {
-                    m_history.Add(cycle);
+                    m_activeArbitrage.Add(cycle);
                     Status(cycle.Path + " added.");
                 }
 
@@ -756,19 +752,22 @@ BAG*/
 
         private void CalculateHistorical()
         {
-            foreach (ArbitrageCycle cycle in m_history)
+            for (int i = 0; i < m_activeArbitrage.Count; i++ )
             {
-                for (int i = 0; i < cycle.Edges.Count; i++ )
+                ArbitrageCycle cycle = m_activeArbitrage.ToList()[i];
+                cycle.Current = m_currentTime;
+                for (int j = 0; j < cycle.Edges.Count; j++)
                 {
-                    DirectedEdge edge = cycle.Edges[i];
-                    edge.Weight = m_a[edge.From, edge.To];
+                    DirectedEdge edge = cycle.Edges[j];
+                    cycle.Edges[j] = new DirectedEdge(edge.From, edge.To, m_a[edge.From, edge.To]);
+                }
+
+                if (cycle.Profit < 0.001d)
+                {
+                    m_historicalArbitrage.Add(cycle);
+                    m_activeArbitrage.Remove(cycle);
                 }
             }
-        }
-
-        private bool CanCalculateArbitrage()
-        {
-            return m_a != null && m_b != null && m_c != null;
         }
 
         #endregion
