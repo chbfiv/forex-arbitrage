@@ -15,7 +15,7 @@ namespace forex_arbitrage
         private DirectedEdge[] m_edgeTo;
         private bool[] m_onQueue;
         private Queue<int> m_queue;
-        private int cost;
+        private int m_cost;
         private IEnumerable<DirectedEdge> m_cycle;
 
         #endregion
@@ -25,6 +25,19 @@ namespace forex_arbitrage
         public IEnumerable<DirectedEdge> negativeCycle
         {
             get { return m_cycle; }
+        }
+
+        public int negativeCycleCount
+        {
+            get
+            {
+                return m_cycle != null ? m_cycle.Count() : 0; 
+            }
+        }
+
+        public Queue<int> Queue
+        {
+            get { return m_queue; }
         }
 
         public bool hasNegativeCycle
@@ -53,13 +66,23 @@ namespace forex_arbitrage
             m_queue = new Queue<int>();
             m_queue.Enqueue(s);
 
+            int negativeCycleCheck = 1000;
             while (m_queue.Count > 0 && !hasNegativeCycle)
             {
                 int v = m_queue.Dequeue();
                 m_onQueue[v] = false;
                 relax(G, v);
-            }
 
+                if (m_cost++ % negativeCycleCheck == 0)
+                   findNegativeCycle();
+            } 
+            
+            //TODO
+            /*if (!check(G, s))
+            {
+                //throw new Exception("found cycle in digraph");
+                Log.Info("failed to assert a cycle in digraph");
+            }*/
         }
 
         #endregion
@@ -81,12 +104,12 @@ namespace forex_arbitrage
                         m_onQueue[w] = true;
                     }
                 }
-                if (cost++ % G.V == 0)
-                    findNegativeCycle();
+               // if (m_cost++ % G.V == 0)
+                 //   findNegativeCycle();
             }
         }
 
-        private void findNegativeCycle()
+        public IEnumerable<DirectedEdge> findNegativeCycle()
         {
             int V = m_edgeTo.Length;
             EdgeWeightedDigraph spt = new EdgeWeightedDigraph(V);
@@ -97,7 +120,7 @@ namespace forex_arbitrage
             }
 
             EdgeWeightedDirectedCycle finder = new EdgeWeightedDirectedCycle(spt);
-            m_cycle = finder.cycle;
+            return m_cycle = finder.cycle;
         }
 
         #endregion        

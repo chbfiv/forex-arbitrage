@@ -53,8 +53,9 @@ namespace forex_arbitrage
         private Matrix m_a;
         private Matrix m_b;
         private Matrix m_c;
-        
+
         private Matrix m_aTest = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
+        private Matrix m_aTest2 = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
         //private DenseMatrix m_aTest2 = new DenseMatrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
         private Matrix m_bTest = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
         private Matrix m_cTest = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
@@ -161,85 +162,84 @@ namespace forex_arbitrage
             m_aTest[0, 4] = 7.8064;
             m_aTest[0, 5] = 1.4247;
 
-            m_aTest[1, 0] = 1.459;
+            m_aTest[1, 0] = 1/m_aTest[0, 1];
             m_aTest[1, 1] = 1;
             m_aTest[1, 2] = 0.8113;
             m_aTest[1, 3] = 157.8017;
             m_aTest[1, 4] = 11.3894;
             m_aTest[1, 5] = 2.0789;
 
-            m_aTest[2, 0] = 1.7998;
-            m_aTest[2, 1] = 1.233198;
+            m_aTest[2, 0] = 1 / m_aTest[0, 2];
+            m_aTest[2, 1] = 1 / m_aTest[1, 2];
             m_aTest[2, 2] = 1;
             m_aTest[2, 3] = 200.35;
             m_aTest[2, 4] = 14.11;
             m_aTest[2, 5] = 2.5657;
 
-            m_aTest[3, 0] = 0.009248;
-            m_aTest[3, 1] = 0.00634;
-            m_aTest[3, 2] = 0.005199;
+            m_aTest[3, 0] = 1 / m_aTest[0, 3];
+            m_aTest[3, 1] = 1 / m_aTest[1, 3];
+            m_aTest[3, 2] = 1 / m_aTest[2, 3];
             m_aTest[3, 3] = 1;
             m_aTest[3, 4] = 0.074129;
             m_aTest[3, 5] = 0.013217;
 
-            m_aTest[4, 0] = 0.128116;
-            m_aTest[4, 1] = 0.087828;
-            m_aTest[4, 2] = 0.070947;
-            m_aTest[4, 3] = 14.35;
+            m_aTest[4, 0] = 1 / m_aTest[0, 4];
+            m_aTest[4, 1] = 1 / m_aTest[1, 4];
+            m_aTest[4, 2] = 1 / m_aTest[2, 4];
+            m_aTest[4, 3] = 1 / m_aTest[3, 4];
             m_aTest[4, 4] = 1;
             m_aTest[4, 5] = 0.182582;
 
-            m_aTest[5, 0] = 0.702395;
-            m_aTest[5, 1] = 0.481348;
-            m_aTest[5, 2] = 0.389757;
-            m_aTest[5, 3] = 77.32;
-            m_aTest[5, 4] = 5.4845;
+            m_aTest[5, 0] = 1 / m_aTest[0, 5];
+            m_aTest[5, 1] = 1 / m_aTest[1, 5];
+            m_aTest[5, 2] = 1 / m_aTest[2, 5];
+            m_aTest[5, 3] = 1 / m_aTest[3, 5];
+            m_aTest[5, 4] = 1 / m_aTest[4, 5];
             m_aTest[5, 5] = 1;
 
-            /*
+
             //A2
-            m_aTest2[0, 0] = 1;
-            m_aTest2[0, 1] = 0.685636;
-            m_aTest2[0, 2] = 0.555772;
-            m_aTest2[0, 3] = 108.18;
-            m_aTest2[0, 4] = 7.8064;
-            m_aTest2[0, 5] = 1.4247;
-
-            m_aTest2[1, 0] = 1.459;
-            m_aTest2[1, 1] = 1;
-            m_aTest2[1, 2] = 0.8113;
-            m_aTest2[1, 3] = 157.8017;
-            m_aTest2[1, 4] = 11.3894;
-            m_aTest2[1, 5] = 2.0789;
-
-            m_aTest2[2, 0] = 1.7998;
-            m_aTest2[2, 1] = 1.233198;
-            m_aTest2[2, 2] = 1;
-            m_aTest2[2, 3] = 200.35;
-            m_aTest2[2, 4] = 14.11;
-            m_aTest2[2, 5] = 2.5657;
-
-            m_aTest2[3, 0] = 0.009248;
-            m_aTest2[3, 1] = 0.00634;
-            m_aTest2[3, 2] = 0.005199;
-            m_aTest2[3, 3] = 1;
-            m_aTest2[3, 4] = 0.074129;
-            m_aTest2[3, 5] = 0.013217;
-
-            m_aTest2[4, 0] = 0.128116;
-            m_aTest2[4, 1] = 0.087828;
-            m_aTest2[4, 2] = 0.070947;
-            m_aTest2[4, 3] = 14.35;
-            m_aTest2[4, 4] = 1;
-            m_aTest2[4, 5] = 0.182582;
-
-            m_aTest2[5, 0] = 0.702395;
-            m_aTest2[5, 1] = 0.481348;
-            m_aTest2[5, 2] = 0.389757;
-            m_aTest2[5, 3] = 77.32;
-            m_aTest2[5, 4] = 5.4845;
             m_aTest2[5, 5] = 1;
-            */
+            m_aTest2[5, 4] = 5.4845;
+            m_aTest2[5, 3] = 77.32;
+            m_aTest2[5, 2] = 0.389757;
+            m_aTest2[5, 1] = 0.481348;
+            m_aTest2[5, 0] = 0.702395;
+
+            m_aTest2[4, 5] = 1 / m_aTest2[5, 4];
+            m_aTest2[4, 4] = 1;
+            m_aTest2[4, 3] = 14.35;
+            m_aTest2[4, 2] = 0.070947;
+            m_aTest2[4, 1] = 0.087828;
+            m_aTest2[4, 0] = 0.128116;
+
+            m_aTest2[3, 5] = 1 / m_aTest2[5, 3];
+            m_aTest2[3, 4] = 1 / m_aTest2[4, 3];
+            m_aTest2[3, 3] = 1;
+            m_aTest2[3, 2] = 0.005199;
+            m_aTest2[3, 1] = 0.00634;
+            m_aTest2[3, 0] = 0.009248;
+
+            m_aTest2[2, 5] = 1 / m_aTest2[5, 2];
+            m_aTest2[2, 4] = 1 / m_aTest2[4, 2];
+            m_aTest2[2, 3] = 1 / m_aTest2[3, 2];
+            m_aTest2[2, 2] = 1;
+            m_aTest2[2, 1] = 1.233198;
+            m_aTest2[2, 0] = 1.7998;
+
+            m_aTest2[1, 5] = 1 / m_aTest2[5, 1];
+            m_aTest2[1, 4] = 1 / m_aTest2[4, 1];
+            m_aTest2[1, 3] = 1 / m_aTest2[3, 1];
+            m_aTest2[1, 2] = 1 / m_aTest2[2, 1];
+            m_aTest2[1, 1] = 1;
+            m_aTest2[1, 0] = 1.459;
+
+            m_aTest2[0, 5] = 1 / m_aTest2[5, 0];
+            m_aTest2[0, 4] = 1 / m_aTest2[4, 0];
+            m_aTest2[0, 3] = 1 / m_aTest2[3, 0];
+            m_aTest2[0, 2] = 1 / m_aTest2[2, 0];
+            m_aTest2[0, 1] = 1 / m_aTest2[1, 0];
+            m_aTest2[0, 0] = 1;            
 
             //B
             m_bTest[0, 0] = 1;
@@ -522,8 +522,8 @@ BAG*/
 
                 m_task = Task.Factory.StartNew(WhileConnectedTick, m_taskToken.Token);
 
-                RequestMarketData("USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD");
-                //RequestMarketData("USD", "EUR", "JPY", "CHF");
+                //RequestMarketData("USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD");
+                RequestMarketData("USD", "EUR", "JPY", "CHF");
             });
         }
 
@@ -558,7 +558,7 @@ BAG*/
 
         private void CalulateTestArbitrage()
         {
-            m_a = m_aTest.Clone();
+            m_a = m_aTest2.Clone();
             m_b = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
             m_c = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
 
@@ -694,27 +694,94 @@ BAG*/
             {
                 for (int w = 0; w < m_a.Cols; w++)
                 {
-                    DirectedEdge e = new DirectedEdge(v, w, -Math.Log(m_a[v, w]));
+                    DirectedEdge e = new DirectedEdge(v, w, -Math.Log(m_a[v, w]));                
                     G.addEdge(e);
                 }
             }
 
             BellmanFordSP spt = new BellmanFordSP(G, 0);
+
+
             if (spt.hasNegativeCycle)
             {
-                double stake = 1000;
+                double stake = 25000;
+                double arbitrage = 1;
+                
+                /*//int[] list = spt.Queue.ToArray();
+                int[] list = new int[] { 1, 3, 0 };
+                for (int i = 0; i <= list.Length; i++)
+                {
+                    if (i == 0) continue;
+                    int vp = list[i - 1];
+                    int v = i == list.Length ? list[0] : list[i];
 
+                    double weight = m_a[vp, v];
+                    Status("from(" + vp + ") to(" + v + ") weight(" + weight + ")");
+                    arbitrage *= weight;
+                }*/
+
+                
                 foreach (DirectedEdge e in spt.negativeCycle)
                 {
-                    stake *= Math.Exp(-e.Weight);
+                    double weight = Math.Exp(-e.Weight);
+                    Status(e.Pair + " " + weight);
+                    arbitrage *= weight;
                 }
+
+                Status("arbitrage(" + arbitrage + ") stake(" + stake + ") balance(" + (arbitrage * stake) + ") profit(" + Math.Round(((arbitrage * stake)/stake) - 1, 5) + "%)");
             }
-            else
-            {
-                StatusError("no arbitrage opportunity");
-            }
+            //else
+            //{
+            //    StatusError("no arbitrage opportunity");
+            //}
         }
 
+        SortedSet<ArbitrageCycle> m_cycles = new SortedSet<ArbitrageCycle>();
+
+        private void CalculateShortestPath2()
+        {
+            /*
+            m_cycles.Clear();
+            //cycles.Add(new ArbitrageCycle(new DirectedEdge(1, 3, m_a[1, 3]), new DirectedEdge(3, 0, m_a[3, 0]), new DirectedEdge(0, 1, m_a[0, 1])));
+            //cycles.Add(new ArbitrageCycle(new DirectedEdge(3, 1, m_a[3, 1]), new DirectedEdge(1, 0, m_a[1, 0]), new DirectedEdge(0, 3, m_a[0, 3])));
+
+            int length = m_a.Rows;
+
+            for (int i = 0; i < length; i++)
+            {
+                for (int j = 0; j < length; j++)
+                {
+                    ArbitrageCycle cycle = new ArbitrageCycle(new DirectedEdge(i, j, m_a[i, j]));
+                    CreateCycles(cycle, i, j, length);
+                }
+            }*/
+        }
+
+        private void CreateCycles(ArbitrageCycle cycle1, int from, int to, int length)
+        {
+            /*
+            if (from == to) return;
+
+            for (int i = 0; i < length; i++)
+            {
+                if (i == from) continue;
+                if (i == to) continue;
+                
+                DirectedEdge edge = new DirectedEdge(to, i, m_a[to, i]);
+
+                cycle1.Add(edge);
+                if (!cycle1.HasMaximumDepth)
+                {
+                    if (cycle1.HasMinimumDepth) m_cycles.Add((ArbitrageCycle)cycle1.Clone());
+                    if (!cycle1.IsCompleteCycle) CreateCycles(cycle1, to, i, length);
+                }
+
+                //ArbitrageCycle cycle2 = new ArbitrageCycle(edge);
+                //cycle2.Add(edge);
+                //if (!cycle2.HasMaximumDepth) CreateCycles(cycle2, to, i, length);
+                //if (cycle2.HasMinimumDepth) m_cycles.Add((ArbitrageCycle)cycle2.Clone());
+            }*/
+        }
 
         private bool CanCalculateArbitrage()
         {

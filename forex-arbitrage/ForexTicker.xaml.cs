@@ -69,6 +69,14 @@ namespace forex_arbitrage
             }
         }
 
+        public Currencies CurrencyId
+        {
+            get
+            {
+                return (Currencies)Enum.Parse(typeof(Currencies), Currency);
+            }
+        }
+
         #endregion
 
         #region Dependency Properties

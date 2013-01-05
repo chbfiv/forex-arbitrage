@@ -67,6 +67,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ArbitrageCycle.cs" />
+    <Compile Include="Edge.cs" />
     <Compile Include="EdgeWeightedDirectedCycle.cs" />
     <Compile Include="BellmanFordSP.cs" />
     <Compile Include="EdgeWeightedDigraph.cs" />

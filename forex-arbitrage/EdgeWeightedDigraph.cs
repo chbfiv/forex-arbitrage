@@ -13,7 +13,7 @@ namespace forex_arbitrage
 
         private int m_v = 0;
         private int m_e = 0;
-        private ConcurrentBag<DirectedEdge>[] m_adj;
+        private HashSet<DirectedEdge>[] m_adj;
 
         #endregion
 
@@ -33,26 +33,35 @@ namespace forex_arbitrage
 
         #region Constructor
 
+        public EdgeWeightedDigraph(int v)
+        {
+            m_v = v;
+            m_adj = new HashSet<DirectedEdge>[v];
+            for (int i = 0; i < m_v; i++)
+                m_adj[i] = new HashSet<DirectedEdge>();
+        }
+
         #endregion
 
         #region Members
 
-        public EdgeWeightedDigraph(int v)
-        {
-            m_v = v;
-            m_adj = new ConcurrentBag<DirectedEdge>[v];
-            for (int i = 0; i < m_v; i++)
-                m_adj[i] = new ConcurrentBag<DirectedEdge>();
-        }
-
         public void addEdge(DirectedEdge e)
         {
             int v = e.From;
-            m_adj[v].Add(e);
-            m_e++;
+            if (m_adj[v].Add(e))
+            {
+                m_e++;
+            }
+            /*if (!m_adj[v].Contains(e))
+            {
+            }
+            else
+            {
+
+            }*/
         }
 
-        public ConcurrentBag<DirectedEdge> adj(int v)
+        public IEnumerable<DirectedEdge> adj(int v)
         {
             return m_adj[v];
         }

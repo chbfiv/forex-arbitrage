@@ -47,9 +47,10 @@ namespace forex_arbitrage
                 if (!m_marked[v]) dfs(G, v);
             }
 
-            if (check(G))
+            if (!check(G))
             {
-                throw new Exception("found cycle in digraph");
+                //throw new Exception("found cycle in digraph");
+                Log.Error("failed to assert a cycle in digraph");
             }
         }
 
@@ -66,7 +67,10 @@ namespace forex_arbitrage
             {
                 int w = e.To;
 
-                if (m_cycle != null) return;
+                if (m_cycle != null)
+                {
+                    return;
+                }
                 else if (!m_marked[w])
                 {
                     m_edgeTo[w] = e;
@@ -76,14 +80,13 @@ namespace forex_arbitrage
                 {
                     m_cycle = new Stack<DirectedEdge>();
                     DirectedEdge ee = e;
-                    while (e.From != w)
+                    while (ee.From != w)
                     {
-                        m_cycle.Push(e);
-                        ee = m_edgeTo[e.From];
+                        m_cycle.Push(ee);
+                        ee = m_edgeTo[ee.From];
                     }
-                    m_cycle.Push(e);
+                    m_cycle.Push(ee);
                 }
-
             }
 
             m_onStack[v] = false;
