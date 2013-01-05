@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace forex_arbitrage
 {
     [DebuggerDisplay("{Pair} = {Weight}")]
-    public class DirectedEdge : ICloneable //, IEqualityComparer<DirectedEdge> //, IEquatable<DirectedEdge> //, IComparable<DirectedEdge>, IComparer<DirectedEdge>, IEqualityComparer<DirectedEdge>, IEquatable<DirectedEdge>
+    public struct DirectedEdge //: //ICloneable //, IEqualityComparer<DirectedEdge> //, IEquatable<DirectedEdge> //, IComparable<DirectedEdge>, IComparer<DirectedEdge>, IEqualityComparer<DirectedEdge>, IEquatable<DirectedEdge>
     {
         #region Fields
 
@@ -38,6 +38,14 @@ namespace forex_arbitrage
             set { m_weight = value; }
         }
 
+        public bool IsSet
+        {
+            get
+            {
+                return m_v != 0 || m_w != 0 || m_weight != 0;
+            }
+        }
+
         public string Pair
         {
             get
@@ -55,13 +63,6 @@ namespace forex_arbitrage
             m_v = v;
             m_w = w;
             m_weight = weight;
-        }
-
-        public DirectedEdge(DirectedEdge edge)
-        {
-            From = edge.From;
-            To = edge.To;
-            Weight = edge.Weight;
         }
 
         #endregion
@@ -125,7 +126,7 @@ namespace forex_arbitrage
         public override bool Equals(object obj)
         {
             DirectedEdge x = this;
-            DirectedEdge y = obj as DirectedEdge;
+            DirectedEdge y = (DirectedEdge)obj;
 
             //Check whether the compared objects reference the same data. 
             if (Object.ReferenceEquals(x, y)) return true;
@@ -148,11 +149,6 @@ namespace forex_arbitrage
         {
             return From == other.From && To == other.To;
         }*/
-
-        public object Clone()
-        {
-            return new DirectedEdge(this);
-        }
 
         #endregion
 

@@ -115,7 +115,7 @@ namespace forex_arbitrage
             EdgeWeightedDigraph spt = new EdgeWeightedDigraph(V);
             for (int v = 0; v < V; v++)
             {
-                if (m_edgeTo[v] != null)
+                if (m_edgeTo[v].IsSet)
                     spt.addEdge(m_edgeTo[v]);
             }
 

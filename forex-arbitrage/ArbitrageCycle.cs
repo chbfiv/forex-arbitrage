@@ -7,8 +7,23 @@ using System.Threading.Tasks;
 
 namespace forex_arbitrage
 {
+    public class ArbitrageCycleComparer : IEqualityComparer<ArbitrageCycle>
+    {
+        public bool Equals(ArbitrageCycle x, ArbitrageCycle y)
+        {
+            int xCount = x.Edges.Count;
+            int yCount = y.Edges.Count;
+            return xCount == yCount && x.Edges.Union(y.Edges).Count() == xCount;
+        }
+
+        public int GetHashCode(ArbitrageCycle obj)
+        {
+            return obj.Edges.GetHashCode();
+        }
+    }
+
     [DebuggerDisplay("{Path} = {Profit}")]
-    public class ArbitrageCycle : IComparable<ArbitrageCycle>, IComparer<ArbitrageCycle>, IEqualityComparer<ArbitrageCycle>, IEquatable<ArbitrageCycle>, ICloneable
+    public class ArbitrageCycle : IComparable<ArbitrageCycle>, IComparer<ArbitrageCycle>, ICloneable
     {
         #region Fields
 
@@ -41,7 +56,7 @@ namespace forex_arbitrage
                 {
                     DirectedEdge f = m_edges[0];
                     DirectedEdge l = m_edges[m_edges.Count - 1];
-                    return f != null && l != null ? f.From == l.To : false;
+                    return f.IsSet && l.IsSet ? f.From == l.To : false;
                 }
                 return false;
             }
@@ -88,7 +103,7 @@ namespace forex_arbitrage
 
         public ArbitrageCycle(ArbitrageCycle cycle)
         {
-            DirectedEdge[] temp = cycle.Edges.Select(item => (DirectedEdge)item.Clone()).ToArray();
+            DirectedEdge[] temp = cycle.Edges.Select(item => (DirectedEdge)item).ToArray();
             m_edges = new List<DirectedEdge>(temp);
         }
 
@@ -128,19 +143,24 @@ namespace forex_arbitrage
             return x.CompareTo(y);
         }
 
+        public int GetHashCode(ArbitrageCycle obj)
+        {
+            return obj.GetHashCode();
+        }
+
+        public override int GetHashCode()
+        {
+            return m_edges.GetHashCode();
+        }
+
         public bool Equals(ArbitrageCycle x, ArbitrageCycle y)
         {
             return x.Equals(y);
         }
 
-        public int GetHashCode(ArbitrageCycle obj)
+        public override bool Equals(object obj)
         {
-            return m_edges.GetHashCode();
-        }
-
-        public bool Equals(ArbitrageCycle other)
-        {
-            return m_edges.Equals(other);
+            return m_edges.Equals(obj);
         }
 
         public object Clone()

@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -68,7 +69,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ArbitrageCycle.cs" />
-    <Compile Include="Edge.cs" />
     <Compile Include="EdgeWeightedDirectedCycle.cs" />
     <Compile Include="BellmanFordSP.cs" />
     <Compile Include="EdgeWeightedDigraph.cs" />

@@ -97,13 +97,13 @@ namespace forex_arbitrage
 
             if (hasCycle)
             {
-                DirectedEdge first = null;
-                DirectedEdge last = null;
+                DirectedEdge first = new DirectedEdge(0, 0, 0);
+                DirectedEdge last = new DirectedEdge(0, 0, 0);
 
                 foreach (DirectedEdge e in cycle)
                 {
-                    if (first == null) first = e;
-                    if (last != null)
+                    if (!first.IsSet) first = e;
+                    if (last.IsSet)
                     {
                         if (last.To != e.From)
                         {

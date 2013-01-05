@@ -428,7 +428,7 @@ namespace forex_arbitrage
                         myGrid.Children.Add(ticker);                        
                         m_tickers[i,j] = ticker;
 
-                        m_tws.reqMktData2(ticker.Id, ticker.LocalSymbol, "CASH", "SMART", "IDEALPRO", ticker.LocalCurrency, Contract.GENERIC_TICK_TAGS, 0);
+                        if (ticker.IsNormalized) m_tws.reqMktData2(ticker.Id, ticker.LocalSymbol, "CASH", "SMART", "IDEALPRO", ticker.LocalCurrency, Contract.GENERIC_TICK_TAGS, 0);
                     }
                 }
             }
@@ -452,6 +452,12 @@ BAG*/
             int j = (id >> 16) & 0xFFFF;
 
             ForexTicker ticker = m_tickers[i, j];
+            if (ticker != null)
+            {
+                ticker.Price = price;
+            }
+
+            ticker = m_tickers[j, i];
             if (ticker != null)
             {
                 ticker.Price = price;
@@ -553,7 +559,8 @@ BAG*/
             CalculateB();
             CalculateC();
             CalculateSD();
-            CalculateShortestPath();
+            CalculateShortestPath(); 
+            CalculateHistorical();
         }
 
         private void CalulateTestArbitrage()
@@ -566,6 +573,7 @@ BAG*/
             CalculateC();
             CalculateSD();
             CalculateShortestPath();
+            CalculateHistorical();
         }
 
         private void CalculateA()
@@ -687,6 +695,9 @@ BAG*/
             });
         }
 
+        private ArbitrageCycleComparer ARBITRAGE_CYCLE_COMPARER = new ArbitrageCycleComparer();
+        private SortedSet<ArbitrageCycle> m_history = new SortedSet<ArbitrageCycle>();
+
         private void CalculateShortestPath()
         {
             EdgeWeightedDigraph G = new EdgeWeightedDigraph(m_a.Rows);
@@ -701,8 +712,7 @@ BAG*/
 
             BellmanFordSP spt = new BellmanFordSP(G, 0);
 
-
-            if (spt.hasNegativeCycle)
+            if (spt.negativeCycleCount > 2)
             {
                 double stake = 25000;
                 double arbitrage = 1;
@@ -720,12 +730,20 @@ BAG*/
                     arbitrage *= weight;
                 }*/
 
+                ArbitrageCycle cycle = new ArbitrageCycle();
                 
                 foreach (DirectedEdge e in spt.negativeCycle)
                 {
                     double weight = Math.Exp(-e.Weight);
                     Status(e.Pair + " " + weight);
                     arbitrage *= weight;
+                    cycle.Edges.Add(new DirectedEdge(e.From, e.To, weight));
+                }
+
+                if (!m_history.Contains(cycle, ARBITRAGE_CYCLE_COMPARER))
+                {
+                    m_history.Add(cycle);
+                    Status(cycle.Path + " added.");
                 }
 
                 Status("arbitrage(" + arbitrage + ") stake(" + stake + ") balance(" + (arbitrage * stake) + ") profit(" + Math.Round(((arbitrage * stake)/stake) - 1, 5) + "%)");
@@ -736,51 +754,16 @@ BAG*/
             //}
         }
 
-        SortedSet<ArbitrageCycle> m_cycles = new SortedSet<ArbitrageCycle>();
-
-        private void CalculateShortestPath2()
+        private void CalculateHistorical()
         {
-            /*
-            m_cycles.Clear();
-            //cycles.Add(new ArbitrageCycle(new DirectedEdge(1, 3, m_a[1, 3]), new DirectedEdge(3, 0, m_a[3, 0]), new DirectedEdge(0, 1, m_a[0, 1])));
-            //cycles.Add(new ArbitrageCycle(new DirectedEdge(3, 1, m_a[3, 1]), new DirectedEdge(1, 0, m_a[1, 0]), new DirectedEdge(0, 3, m_a[0, 3])));
-
-            int length = m_a.Rows;
-
-            for (int i = 0; i < length; i++)
+            foreach (ArbitrageCycle cycle in m_history)
             {
-                for (int j = 0; j < length; j++)
+                for (int i = 0; i < cycle.Edges.Count; i++ )
                 {
-                    ArbitrageCycle cycle = new ArbitrageCycle(new DirectedEdge(i, j, m_a[i, j]));
-                    CreateCycles(cycle, i, j, length);
+                    DirectedEdge edge = cycle.Edges[i];
+                    edge.Weight = m_a[edge.From, edge.To];
                 }
-            }*/
-        }
-
-        private void CreateCycles(ArbitrageCycle cycle1, int from, int to, int length)
-        {
-            /*
-            if (from == to) return;
-
-            for (int i = 0; i < length; i++)
-            {
-                if (i == from) continue;
-                if (i == to) continue;
-                
-                DirectedEdge edge = new DirectedEdge(to, i, m_a[to, i]);
-
-                cycle1.Add(edge);
-                if (!cycle1.HasMaximumDepth)
-                {
-                    if (cycle1.HasMinimumDepth) m_cycles.Add((ArbitrageCycle)cycle1.Clone());
-                    if (!cycle1.IsCompleteCycle) CreateCycles(cycle1, to, i, length);
-                }
-
-                //ArbitrageCycle cycle2 = new ArbitrageCycle(edge);
-                //cycle2.Add(edge);
-                //if (!cycle2.HasMaximumDepth) CreateCycles(cycle2, to, i, length);
-                //if (cycle2.HasMinimumDepth) m_cycles.Add((ArbitrageCycle)cycle2.Clone());
-            }*/
+            }
         }
 
         private bool CanCalculateArbitrage()
