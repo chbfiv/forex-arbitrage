@@ -64,6 +64,7 @@ namespace forex_arbitrage
         private ArbitrageCycleComparer ARBITRAGE_CYCLE_COMPARER = new ArbitrageCycleComparer();
         private SortedSet<ArbitrageCycle> m_activeArbitrage = new SortedSet<ArbitrageCycle>();
         private SortedSet<ArbitrageCycle> m_historicalArbitrage = new SortedSet<ArbitrageCycle>();
+        private SortedSet<ArbitrageCycle> m_watchArbitrage = new SortedSet<ArbitrageCycle>();
 
         public const int NO_SECURITY_DEF_FOUND = 200;
         public const int TEST_ARBITRAGE_SIZE = 6;
@@ -143,6 +144,8 @@ namespace forex_arbitrage
             myGrid.Visibility = Visibility.Hidden;
 
             FillTestData();
+
+            FillWatchArbitrage();
         }
 
         private DateTime m_currentTime = DateTime.Now;
@@ -340,6 +343,45 @@ namespace forex_arbitrage
             m_cTest[5, 3] = 1111;
             m_cTest[5, 4] = 1111;
             m_cTest[5, 5] = 1;
+        }
+
+        private void FillWatchArbitrage()
+        {
+            ArbitrageCycle cycle = new ArbitrageCycle(DateTime.Now);
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.EUR, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.EUR, (int)Currencies.JPY, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.JPY, (int)Currencies.USD, 1));
+            m_watchArbitrage.Add(cycle);
+
+            cycle = new ArbitrageCycle(DateTime.Now);
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.JPY, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.JPY, (int)Currencies.EUR, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.EUR, (int)Currencies.USD, 1.1));
+            m_watchArbitrage.Add(cycle);
+
+            cycle = new ArbitrageCycle(DateTime.Now);
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.EUR, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.EUR, (int)Currencies.CHF, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.CHF, (int)Currencies.USD, 1.2));
+            m_watchArbitrage.Add(cycle);
+
+            cycle = new ArbitrageCycle(DateTime.Now);
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.CHF, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.CHF, (int)Currencies.EUR, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.EUR, (int)Currencies.USD, 1.3));
+            m_watchArbitrage.Add(cycle);
+
+            cycle = new ArbitrageCycle(DateTime.Now);
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.JPY, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.JPY, (int)Currencies.CHF, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.CHF, (int)Currencies.USD, 1.4));
+            m_watchArbitrage.Add(cycle);
+
+            cycle = new ArbitrageCycle(DateTime.Now);
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.CHF, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.CHF, (int)Currencies.JPY, 1));
+            cycle.Edges.Add(new DirectedEdge((int)Currencies.JPY, (int)Currencies.USD, 1.5));
+            m_watchArbitrage.Add(cycle);
         }
 
         private void m_tws_updateMktDepthL2(int id, int position, string marketMaker, int operation, int side, double price, int size)
@@ -741,16 +783,11 @@ BAG*/
                     Status(cycle.Summary);
                     Status("arbitrage(" + arbitrage + ") stake(" + stake + ") balance(" + (arbitrage * stake) + ") profit(" + Math.Round(((arbitrage * stake) / stake) - 1, 5) + "%)");
                 }
-
             }
-            //else
-            //{
-            //    StatusError("no arbitrage opportunity");
-            //}
         }
 
         private void CalculateHistorical()
-        {
+        {            
             for (int i = 0; i < m_activeArbitrage.Count; i++ )
             {
                 ArbitrageCycle cycle = m_activeArbitrage.ToList()[i];
@@ -766,7 +803,66 @@ BAG*/
                     m_historicalArbitrage.Add(cycle);
                     m_activeArbitrage.Remove(cycle);
                 }
+
+
+                Dispatcher.Invoke(() =>
+                {
+                    if (m_activeListBox.Items.Count > i)
+                        m_activeListBox.Items[i] = cycle.Summary;
+                    else
+                        m_activeListBox.Items.Add(cycle.Summary);
+                });
             }
+
+            Dispatcher.Invoke(() =>
+            {
+                for (int j = m_activeListBox.Items.Count - 1; j >= m_activeArbitrage.Count; j--)
+                    m_activeListBox.Items.RemoveAt(j);
+            });
+
+            for (int i = 0; i < m_historicalArbitrage.Count; i++)
+            {
+                ArbitrageCycle cycle = m_historicalArbitrage.ToList()[i];
+
+                Dispatcher.Invoke(() =>
+                {
+                    if (m_historicListBox.Items.Count > i)
+                        m_historicListBox.Items[i] = cycle.Summary;
+                    else
+                        m_historicListBox.Items.Add(cycle.Summary);
+                });
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                for (int j = m_historicListBox.Items.Count - 1; j >= m_historicalArbitrage.Count; j--)
+                    m_historicListBox.Items.RemoveAt(j);
+            });
+
+            for (int i = 0; i < m_watchArbitrage.Count; i++)
+            {
+                ArbitrageCycle cycle = m_watchArbitrage.ToList()[i];
+                cycle.Current = m_currentTime;
+                for (int j = 0; j < cycle.Edges.Count; j++)
+                {
+                    DirectedEdge edge = cycle.Edges[j];
+                    cycle.Edges[j] = new DirectedEdge(edge.From, edge.To, m_a[edge.From, edge.To]);
+                }
+
+                Dispatcher.Invoke(() =>
+                {
+                    if (m_watchListBox.Items.Count > i)
+                        m_watchListBox.Items[i] = cycle.Summary;
+                    else
+                        m_watchListBox.Items.Add(cycle.Summary);
+                });
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                for (int j = m_watchListBox.Items.Count - 1; j >= m_watchArbitrage.Count; j--)
+                    m_watchListBox.Items.RemoveAt(j);
+            });
         }
 
         #endregion

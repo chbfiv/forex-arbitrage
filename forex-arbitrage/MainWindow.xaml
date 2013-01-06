@@ -42,24 +42,46 @@
             </MenuItem>
         </Menu>
         <Viewbox Grid.Row="2" x:Name="myViewbox" >
-            <StackPanel Orientation="Horizontal">
-                <StackPanel Grid.Row="1" Orientation="Vertical">
-                    <TextBlock Text="MEAN/SD"/>
-                    <StackPanel Orientation="Horizontal">
-                        <Label Content="{Binding Mean, FallbackValue=0.0000, StringFormat='{}{0:#,0}'}"/>
-                        <TextBlock Text="/" />
-                        <Label Content="{Binding SD, FallbackValue=0.0000, StringFormat='{}{0:#,0}'}"/>
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal">
+                    <StackPanel Grid.Row="1" Orientation="Vertical">
+                        <TextBlock Text="MEAN/SD"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="{Binding Mean, FallbackValue=0.0000, StringFormat='{}{0:#,0}'}"/>
+                            <TextBlock Text="/" />
+                            <Label Content="{Binding SD, FallbackValue=0.0000, StringFormat='{}{0:#,0}'}"/>
+                        </StackPanel>
+                        <Separator />
+                        <TextBlock Text="A/B λmax"/>
+                        <StackPanel Orientation="Horizontal">
+                            <Label Content="{Binding ALambdaMax, FallbackValue=0.0000, StringFormat='{}{0:#,0}'}"/>
+                            <TextBlock Text="/" />
+                            <Label Content="{Binding BLambdaMax, FallbackValue=0.0000, StringFormat='{}{0:#,0}'}"/>
+                        </StackPanel>
+                        <Separator  />
                     </StackPanel>
-                    <Separator />
-                    <TextBlock Text="A/B λmax"/>
-                    <StackPanel Orientation="Horizontal">
-                        <Label Content="{Binding ALambdaMax, FallbackValue=0.0000, StringFormat='{}{0:#,0}'}"/>
-                        <TextBlock Text="/" />
-                        <Label Content="{Binding BLambdaMax, FallbackValue=0.0000, StringFormat='{}{0:#,0}'}"/>
-                    </StackPanel>
-                    <Separator  />
+                    <Grid x:Name="myGrid" ShowGridLines="True" />
                 </StackPanel>
-                <Grid x:Name="myGrid" ShowGridLines="True" />
+                <TabControl>
+                    <TabItem Header="Active">
+                        <ListBox x:Name="m_activeListBox">
+                            <ListBoxItem>USD.EUR > EUR.CHF > CHF.USD (0.01%)</ListBoxItem>
+                            <ListBoxItem>USD.JPY > JPY.CHF > CHF.USD (0.02%)</ListBoxItem>
+                        </ListBox>
+                    </TabItem>
+                    <TabItem Header="Historic">
+                        <ListBox x:Name="m_historicListBox">
+                            <ListBoxItem>USD.EUR > EUR.CHF > CHF.USD (0.01%)</ListBoxItem>
+                            <ListBoxItem>USD.JPY > JPY.CHF > CHF.USD (0.02%)</ListBoxItem>
+                        </ListBox>
+                    </TabItem>
+                    <TabItem Header="Watch">
+                        <ListBox x:Name="m_watchListBox">
+                            <ListBoxItem>USD.EUR > EUR.CHF > CHF.USD (0.01%)</ListBoxItem>
+                            <ListBoxItem>USD.JPY > JPY.CHF > CHF.USD (0.02%)</ListBoxItem>
+                        </ListBox>
+                    </TabItem>
+                </TabControl>
             </StackPanel>
         </Viewbox>
         <StatusBar Grid.Row="3">

@@ -80,16 +80,24 @@ namespace forex_arbitrage
             get { return m_current - m_origin; }
         }
 
+        public double Weight
+        {
+            get
+            {
+                double weight = 1;
+                foreach (DirectedEdge edge in m_edges)
+                {
+                    weight *= edge.Weight;
+                }
+                return Math.Round(weight, 5);
+            }
+        }
+
         public double Profit
         {
             get
             {
-                double profit = 1;
-                foreach (DirectedEdge edge in m_edges)
-                {
-                    profit *= edge.Weight;
-                }
-                return profit;
+                return Math.Round(100*(Weight - 1), 5);
             }
         }
 
@@ -97,10 +105,10 @@ namespace forex_arbitrage
         {
             get
             {
-                string path = "\n";
+                string path = String.Empty;
                 foreach (DirectedEdge edge in m_edges)
                 {
-                    path += edge.Pair + " " + edge.Weight + "\n";
+                    path += edge.Pair + "(" + edge.Weight + ")>";
                 }
                 return path;
             }
@@ -110,7 +118,7 @@ namespace forex_arbitrage
         {
             get
             {
-                return Path + "profit(" + Profit + ")";
+                return Path + "(" + Profit + "%)";
             }
         }
 
