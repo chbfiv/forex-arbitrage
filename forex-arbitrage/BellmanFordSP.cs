@@ -66,6 +66,7 @@ namespace forex_arbitrage
             m_queue = new Queue<int>();
             m_queue.Enqueue(s);
 
+            /*
             int negativeCycleCheck = 1000;
             while (m_queue.Count > 0 && !hasNegativeCycle)
             {
@@ -75,7 +76,19 @@ namespace forex_arbitrage
 
                 if (m_cost++ % negativeCycleCheck == 0)
                    findNegativeCycle();
+            }*/
+
+            for (int i = 0; i < G.V; i++)
+            {
+                if (m_queue.Count > 0)
+                {
+                    int v = m_queue.Dequeue();
+                    m_onQueue[v] = false;
+                    relax(G, v);
+                }                   
             } 
+
+            findNegativeCycle();
             
             //TODO
             /*if (!check(G, s))

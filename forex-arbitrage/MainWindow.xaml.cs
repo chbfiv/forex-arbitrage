@@ -731,7 +731,6 @@ BAG*/
                 foreach (DirectedEdge e in spt.negativeCycle)
                 {
                     double weight = Math.Exp(-e.Weight);
-                    Status(e.Pair + " " + weight);
                     arbitrage *= weight;
                     cycle.Edges.Add(new DirectedEdge(e.From, e.To, weight));
                 }
@@ -739,10 +738,10 @@ BAG*/
                 if (!m_activeArbitrage.Contains(cycle, ARBITRAGE_CYCLE_COMPARER))
                 {
                     m_activeArbitrage.Add(cycle);
-                    Status(cycle.Path + " added.");
+                    Status(cycle.Summary);
+                    Status("arbitrage(" + arbitrage + ") stake(" + stake + ") balance(" + (arbitrage * stake) + ") profit(" + Math.Round(((arbitrage * stake) / stake) - 1, 5) + "%)");
                 }
 
-                Status("arbitrage(" + arbitrage + ") stake(" + stake + ") balance(" + (arbitrage * stake) + ") profit(" + Math.Round(((arbitrage * stake)/stake) - 1, 5) + "%)");
             }
             //else
             //{

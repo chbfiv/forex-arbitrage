@@ -97,12 +97,20 @@ namespace forex_arbitrage
         {
             get
             {
-                string path = string.Empty;
+                string path = "\n";
                 foreach (DirectedEdge edge in m_edges)
                 {
-                    path += edge.Pair + ">";
+                    path += edge.Pair + " " + edge.Weight + "\n";
                 }
                 return path;
+            }
+        }
+
+        public string Summary
+        {
+            get
+            {
+                return Path + "profit(" + Profit + ")";
             }
         }
 
