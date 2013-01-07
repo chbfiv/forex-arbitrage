@@ -108,7 +108,11 @@ namespace forex_arbitrage
                 string path = String.Empty;
                 foreach (DirectedEdge edge in m_edges)
                 {
-                    path += edge.Pair + "(" + edge.Weight + ")>";
+                    path += edge.Pair + ">";
+                }
+                foreach (DirectedEdge edge in m_edges)
+                {
+                    path += edge.Weight + ">";
                 }
                 return path;
             }

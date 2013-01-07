@@ -144,8 +144,6 @@ namespace forex_arbitrage
             myGrid.Visibility = Visibility.Hidden;
 
             FillTestData();
-
-            FillWatchArbitrage();
         }
 
         private DateTime m_currentTime = DateTime.Now;
@@ -347,41 +345,118 @@ namespace forex_arbitrage
 
         private void FillWatchArbitrage()
         {
-            ArbitrageCycle cycle = new ArbitrageCycle(DateTime.Now);
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.EUR, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.EUR, (int)Currencies.JPY, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.JPY, (int)Currencies.USD, 1));
-            m_watchArbitrage.Add(cycle);
+            int currencyCount = m_a.Rows;
+            int offset = 0;
 
-            cycle = new ArbitrageCycle(DateTime.Now);
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.JPY, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.JPY, (int)Currencies.EUR, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.EUR, (int)Currencies.USD, 1.1));
-            m_watchArbitrage.Add(cycle);
+            m_watchArbitrage.Clear();
 
-            cycle = new ArbitrageCycle(DateTime.Now);
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.EUR, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.EUR, (int)Currencies.CHF, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.CHF, (int)Currencies.USD, 1.2));
-            m_watchArbitrage.Add(cycle);
+            for (int i = 0; i < currencyCount; i++)
+            {
+                for (int j = 0; j < currencyCount; j++)
+                {
+                    int first = i;
+                    int second = j;
 
-            cycle = new ArbitrageCycle(DateTime.Now);
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.CHF, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.CHF, (int)Currencies.EUR, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.EUR, (int)Currencies.USD, 1.3));
-            m_watchArbitrage.Add(cycle);
+                    if (first == second) continue;
 
-            cycle = new ArbitrageCycle(DateTime.Now);
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.JPY, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.JPY, (int)Currencies.CHF, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.CHF, (int)Currencies.USD, 1.4));
-            m_watchArbitrage.Add(cycle);
+                    for (int k = 0; k < currencyCount; k++)
+                    {
+                        int third = k;
 
-            cycle = new ArbitrageCycle(DateTime.Now);
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.USD, (int)Currencies.CHF, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.CHF, (int)Currencies.JPY, 1));
-            cycle.Edges.Add(new DirectedEdge((int)Currencies.JPY, (int)Currencies.USD, 1.5));
-            m_watchArbitrage.Add(cycle);
+                        if (third == first) continue;
+                        if (third == second) continue;
+
+                        ArbitrageCycle c = new ArbitrageCycle(DateTime.Now);
+                        c.Edges.Add(new DirectedEdge(first, second, offset++));
+                        c.Edges.Add(new DirectedEdge(second, third, offset++));
+                        c.Edges.Add(new DirectedEdge(third, first, offset++));
+                        if (!m_watchArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                        {
+                            m_watchArbitrage.Add(c);
+                        }
+
+                        c = new ArbitrageCycle(DateTime.Now);
+                        c.Edges.Add(new DirectedEdge(first, third, offset++));
+                        c.Edges.Add(new DirectedEdge(third, second, offset++));
+                        c.Edges.Add(new DirectedEdge(second, first, offset++));
+                        if (!m_watchArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                        {
+                            m_watchArbitrage.Add(c);
+                        }
+
+                        for (int l = 0; l < currencyCount; l++)
+                        {
+                            int forth = l;
+
+                            if (forth == first) continue;
+                            if (forth == second) continue;
+                            if (forth == third) continue;
+
+                            c = new ArbitrageCycle(DateTime.Now);
+                            c.Edges.Add(new DirectedEdge(first, second, offset++));
+                            c.Edges.Add(new DirectedEdge(second, third, offset++));
+                            c.Edges.Add(new DirectedEdge(third, forth, offset++));
+                            c.Edges.Add(new DirectedEdge(forth, first, offset++));
+                            if (!m_watchArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                            {
+                                m_watchArbitrage.Add(c);
+
+
+                                c = new ArbitrageCycle(DateTime.Now);
+                                c.Edges.Add(new DirectedEdge(first, second, offset++));
+                                c.Edges.Add(new DirectedEdge(second, forth, offset++));
+                                c.Edges.Add(new DirectedEdge(forth, third, offset++));
+                                c.Edges.Add(new DirectedEdge(third, first, offset++));
+                                if (!m_watchArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                                {
+                                    m_watchArbitrage.Add(c);
+                                }
+
+                                c = new ArbitrageCycle(DateTime.Now);
+                                c.Edges.Add(new DirectedEdge(first, third, offset++));
+                                c.Edges.Add(new DirectedEdge(third, forth, offset++));
+                                c.Edges.Add(new DirectedEdge(forth, second, offset++));
+                                c.Edges.Add(new DirectedEdge(second, first, offset++));
+                                if (!m_watchArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                                {
+                                    m_watchArbitrage.Add(c);
+                                }
+
+                                c = new ArbitrageCycle(DateTime.Now);
+                                c.Edges.Add(new DirectedEdge(first, third, offset++));
+                                c.Edges.Add(new DirectedEdge(third, second, offset++));
+                                c.Edges.Add(new DirectedEdge(second, forth, offset++));
+                                c.Edges.Add(new DirectedEdge(forth, first, offset++));
+                                if (!m_watchArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                                {
+                                    m_watchArbitrage.Add(c);
+                                }
+
+                                c = new ArbitrageCycle(DateTime.Now);
+                                c.Edges.Add(new DirectedEdge(first, forth, offset++));
+                                c.Edges.Add(new DirectedEdge(forth, third, offset++));
+                                c.Edges.Add(new DirectedEdge(third, second, offset++));
+                                c.Edges.Add(new DirectedEdge(second, first, offset++));
+                                if (!m_watchArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                                {
+                                    m_watchArbitrage.Add(c);
+                                }
+
+
+                                c = new ArbitrageCycle(DateTime.Now);
+                                c.Edges.Add(new DirectedEdge(first, forth, offset++));
+                                c.Edges.Add(new DirectedEdge(forth, second, offset++));
+                                c.Edges.Add(new DirectedEdge(second, third, offset++));
+                                c.Edges.Add(new DirectedEdge(third, first, offset++));
+                                if (!m_watchArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                                {
+                                    m_watchArbitrage.Add(c);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         private void m_tws_updateMktDepthL2(int id, int position, string marketMaker, int operation, int side, double price, int size)
@@ -403,12 +478,14 @@ namespace forex_arbitrage
                 int i = id & 0xFFFF;
                 int j = (id >> 16) & 0xFFFF;
 
+                
                 ForexTicker ticker = m_tickers[i, j];
                 if (ticker != null)
                 {
-                    myGrid.Children.Remove(ticker);
-                    m_tickers[i, j] = null;
-                }
+                    ticker.Price = 1;
+                    //myGrid.Children.Remove(ticker);
+                    //m_tickers[i, j] = null;
+                }                 
             }
         }
 
@@ -436,7 +513,7 @@ namespace forex_arbitrage
             CalulateTestArbitrage();
         }        
 
-        private void RequestMarketData(params string[] symbols)
+        private void RequestMarketData(params Currencies[] symbols)
         {
             m_tickers = new ForexTicker[symbols.Length, symbols.Length];
             m_a = new Matrix(symbols.Length, symbols.Length); 
@@ -523,12 +600,14 @@ BAG*/
         {
             try
             {
+                SetupArbitrage();
+
                 while (m_tws.serverVersion > 0)
                 {
                     m_tws.reqCurrentTime();
                     CalulateArbitrage();
 
-                    Thread.Sleep(50);
+                    Thread.Sleep(1000);
                 }
 
                 m_taskToken.Cancel();
@@ -584,8 +663,10 @@ BAG*/
 
                 m_task = Task.Factory.StartNew(WhileConnectedTick, m_taskToken.Token);
 
+                RequestMarketData(Currencies.USD, Currencies.EUR, Currencies.JPY, Currencies.GBP, Currencies.AUD, Currencies.CHF, Currencies.CAD);
                 //RequestMarketData("USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD");
-                RequestMarketData("USD", "EUR", "JPY", "CHF");
+                //RequestMarketData("USD", "EUR", "JPY", "CHF");
+                //RequestMarketData("USD", "EUR", "GBP");
             });
         }
 
@@ -618,6 +699,11 @@ BAG*/
 
         #region Arbitrage A/B/C/SD
 
+        private void SetupArbitrage()
+        {
+            FillWatchArbitrage();
+        }
+
         private void CalulateArbitrage()
         {
             CalculateA();
@@ -633,6 +719,8 @@ BAG*/
             m_a = m_aTest2.Clone();
             m_b = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
             m_c = new Matrix(TEST_ARBITRAGE_SIZE, TEST_ARBITRAGE_SIZE);
+
+            SetupArbitrage();
 
             CalculateB();
             CalculateC();
@@ -787,8 +875,34 @@ BAG*/
         }
 
         private void CalculateHistorical()
-        {            
-            for (int i = 0; i < m_activeArbitrage.Count; i++ )
+        {
+            IOrderedEnumerable<ArbitrageCycle> set = m_activeArbitrage.OrderByDescending(a => a);
+            for (int i = 0; i < set.Count(); i++)
+            {
+                ArbitrageCycle cycle = set.ElementAt(i);
+                cycle.Current = m_currentTime;
+                for (int j = 0; j < cycle.Edges.Count; j++)
+                {
+                    DirectedEdge edge = cycle.Edges[j];
+                    cycle.Edges[j] = new DirectedEdge(edge.From, edge.To, m_a[edge.From, edge.To]);
+                }
+
+                if (cycle.Profit < 0.001d)
+                {
+                    m_historicalArbitrage.Add(cycle);
+                    m_activeArbitrage.Remove(cycle);
+                }
+
+                Dispatcher.Invoke(() =>
+                {
+                    if (m_activeListBox.Items.Count > i)
+                        m_activeListBox.Items[i] = cycle.Summary;
+                    else
+                        m_activeListBox.Items.Add(cycle.Summary);
+                });
+            }
+
+            /*for (int i = 0; i < m_activeArbitrage.Count; i++ )
             {
                 ArbitrageCycle cycle = m_activeArbitrage.ToList()[i];
                 cycle.Current = m_currentTime;
@@ -812,7 +926,7 @@ BAG*/
                     else
                         m_activeListBox.Items.Add(cycle.Summary);
                 });
-            }
+            }*/
 
             Dispatcher.Invoke(() =>
             {
@@ -820,9 +934,10 @@ BAG*/
                     m_activeListBox.Items.RemoveAt(j);
             });
 
-            for (int i = 0; i < m_historicalArbitrage.Count; i++)
+            set = m_historicalArbitrage.OrderByDescending(a => a);
+            for (int i = 0; i < set.Count(); i++)
             {
-                ArbitrageCycle cycle = m_historicalArbitrage.ToList()[i];
+                ArbitrageCycle cycle = set.ElementAt(i);
 
                 Dispatcher.Invoke(() =>
                 {
@@ -839,9 +954,10 @@ BAG*/
                     m_historicListBox.Items.RemoveAt(j);
             });
 
-            for (int i = 0; i < m_watchArbitrage.Count; i++)
+            set = m_watchArbitrage.OrderByDescending(a => a);
+            for (int i = 0; i < set.Count(); i++)
             {
-                ArbitrageCycle cycle = m_watchArbitrage.ToList()[i];
+                ArbitrageCycle cycle = set.ElementAt(i);
                 cycle.Current = m_currentTime;
                 for (int j = 0; j < cycle.Edges.Count; j++)
                 {

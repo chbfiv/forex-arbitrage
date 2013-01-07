@@ -50,7 +50,7 @@ namespace forex_arbitrage
         {
             get
             {                
-                return ((Currencies)From).ToString() + ":" + ((Currencies)To).ToString();
+                return ((Currencies)From).ToString() + "." + ((Currencies)To).ToString();
             }
         }
 

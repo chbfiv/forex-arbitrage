@@ -64,19 +64,19 @@
                 </StackPanel>
                 <TabControl>
                     <TabItem Header="Active">
-                        <ListBox x:Name="m_activeListBox">
+                        <ListBox x:Name="m_activeListBox" ScrollViewer.VerticalScrollBarVisibility="Visible" MaxHeight="300">
                             <ListBoxItem>USD.EUR > EUR.CHF > CHF.USD (0.01%)</ListBoxItem>
                             <ListBoxItem>USD.JPY > JPY.CHF > CHF.USD (0.02%)</ListBoxItem>
                         </ListBox>
                     </TabItem>
                     <TabItem Header="Historic">
-                        <ListBox x:Name="m_historicListBox">
+                        <ListBox x:Name="m_historicListBox" ScrollViewer.VerticalScrollBarVisibility="Visible" MaxHeight="300">
                             <ListBoxItem>USD.EUR > EUR.CHF > CHF.USD (0.01%)</ListBoxItem>
                             <ListBoxItem>USD.JPY > JPY.CHF > CHF.USD (0.02%)</ListBoxItem>
                         </ListBox>
                     </TabItem>
                     <TabItem Header="Watch">
-                        <ListBox x:Name="m_watchListBox">
+                        <ListBox x:Name="m_watchListBox" ScrollViewer.VerticalScrollBarVisibility="Visible" MaxHeight="300">
                             <ListBoxItem>USD.EUR > EUR.CHF > CHF.USD (0.01%)</ListBoxItem>
                             <ListBoxItem>USD.JPY > JPY.CHF > CHF.USD (0.02%)</ListBoxItem>
                         </ListBox>

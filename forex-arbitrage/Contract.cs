@@ -10,27 +10,27 @@ namespace forex_arbitrage
     //("USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD"
     public enum Currencies
     {
-       /* USD = 0,
+       /* 
+        USD = 0,
         EUR = 1,
         GBP = 2,
         JPY = 3,
         HKD = 4,
         SGD = 5*/
-
         
+            /*
         USD = 0,
         EUR = 1,
         JPY = 2,
-        CHF = 3,
-
-            /*
+        CHF = 3*/
+            
         USD = 0,
         EUR = 1,
         JPY = 2,
         GBP = 3,
         AUD = 4,
         CHF = 5,
-        CAD = 6*/
+        CAD = 6
     }
 
     public class Contract : IContract

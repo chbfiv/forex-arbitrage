@@ -65,15 +65,7 @@ namespace forex_arbitrage
         {
             get
             {
-                return IsNormalized ? Currency : Underlying;
-            }
-        }
-
-        public Currencies CurrencyId
-        {
-            get
-            {
-                return (Currencies)Enum.Parse(typeof(Currencies), Currency);
+                return IsNormalized ? Currency.ToString() : Underlying.ToString();
             }
         }
 
@@ -115,22 +107,22 @@ namespace forex_arbitrage
         }
 
         public static readonly DependencyProperty UnderlyingProperty =
-            DependencyProperty.Register("Underlying", typeof(String),
+            DependencyProperty.Register("Underlying", typeof(Currencies),
             typeof(ForexTicker));
 
-        public String Underlying
+        public Currencies Underlying
         {
-            get { return (String)GetValue(UnderlyingProperty); }
+            get { return (Currencies)GetValue(UnderlyingProperty); }
             set { SetValue(UnderlyingProperty, value); }
         }
 
         public static readonly DependencyProperty CurrencyProperty =
-            DependencyProperty.Register("Currency", typeof(String),
+            DependencyProperty.Register("Currency", typeof(Currencies),
             typeof(ForexTicker));
 
-        public String Currency
+        public Currencies Currency
         {
-            get { return (String)GetValue(CurrencyProperty); }
+            get { return (Currencies)GetValue(CurrencyProperty); }
             set { SetValue(CurrencyProperty, value); }
         }
 
@@ -143,7 +135,7 @@ namespace forex_arbitrage
             InitializeComponent();
         }
 
-        public ForexTicker(int i, int j, String underlying, String currency)
+        public ForexTicker(int i, int j, Currencies underlying, Currencies currency)
             : this()
         {
             InitializeComponent();
@@ -161,57 +153,104 @@ namespace forex_arbitrage
 
         private bool CalculateNormalized()
         {
-            if (Underlying == "USD")
+            if (Underlying == Currencies.USD)
             {
                 switch (Currency)
                 {
-                    case "EUR":
+                    case Currencies.EUR:
+                    case Currencies.GBP:
+                    case Currencies.AUD:
                         return false;
-                    case "CHF":
-                    case "JPY":
-                    case "HKD":
-                    case "CAD":
-                    case "CNH":
-                    case "CZK":
-                    case "DKK":
-                    case "HUF":
-                    case "ILS":
-                    case "MXN":
-                    case "NOK":
-                    case "PLN":
-                    case "RUB":
-                    case "SEK":
-                    case "SGD":
+                    case Currencies.JPY:
+                    case Currencies.CHF:
+                    case Currencies.CAD:
                         return true;
                 }
             }
-            else if (Underlying == "EUR")
+            else if (Underlying == Currencies.EUR)
             {
                 switch (Currency)
                 {
-                    case "USD":
-                    case "JPY":
-                    case "CHF":
+                    case Currencies.USD:
+                    case Currencies.JPY:
+                    case Currencies.GBP:
+                    case Currencies.AUD:
+                    case Currencies.CHF:
+                    case Currencies.CAD:
                         return true;
                 }
             }
-            else if (Underlying == "JPY")
-            {
-                return false;
-            }
-            else if (Underlying == "CHF")
+            else if (Underlying == Currencies.JPY)
             {
                 switch (Currency)
                 {
-                    case "USD":
-                    case "EUR":
+                    case Currencies.USD:
+                    case Currencies.EUR:
+                    case Currencies.GBP:
+                    case Currencies.AUD:
+                    case Currencies.CHF:
+                    case Currencies.CAD:
                         return false;
-                    case "JPY":
+                }
+            }
+            else if (Underlying == Currencies.GBP)
+            {
+                switch (Currency)
+                {
+                    case Currencies.EUR:
+                        return false;
+                    case Currencies.USD:
+                    case Currencies.JPY:
+                    case Currencies.AUD:
+                    case Currencies.CHF:
+                    case Currencies.CAD:
+                        return true;
+                }
+            }
+            else if (Underlying == Currencies.AUD)
+            {
+                switch (Currency)
+                {
+                    case Currencies.EUR:
+                    case Currencies.GBP:
+                        return false;
+                    case Currencies.USD:
+                    case Currencies.JPY:
+                    case Currencies.CHF:
+                    case Currencies.CAD:
+                        return true;
+                }
+            }
+            else if (Underlying == Currencies.CHF)
+            {
+                switch (Currency)
+                {
+                    case Currencies.USD:
+                    case Currencies.EUR:
+                    case Currencies.GBP:
+                    case Currencies.AUD:
+                    case Currencies.CAD:
+                        return false;
+                    case Currencies.JPY:
+                        return true;
+                }
+            }
+            else if (Underlying == Currencies.CAD)
+            {
+                switch (Currency)
+                {
+                    case Currencies.USD:
+                    case Currencies.EUR:
+                    case Currencies.GBP:
+                    case Currencies.AUD:
+                        return false;
+                    case Currencies.JPY:
+                    case Currencies.CHF:
                         return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         #endregion
