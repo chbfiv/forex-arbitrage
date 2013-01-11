@@ -69,6 +69,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="ArbitrageCycle.cs" />
+    <Compile Include="GainCapitalClient.cs" />
     <Compile Include="EdgeWeightedDirectedCycle.cs" />
     <Compile Include="BellmanFordSP.cs" />
     <Compile Include="EdgeWeightedDigraph.cs" />
@@ -137,6 +138,19 @@
     <Content Include="3rdParty\Interop.TWSLib.dll" />
     <Content Include="3rdParty\MathNet.Numerics.dll" />
     <Content Include="3rdParty\MathNet.Numerics.pdb" />
+    <Content Include="Forex.AuthenticateCredentialsWithBrandCode.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Forex.GetConfigurationSettings.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Resource Include="XMLFile1.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RateServiceAPI\RateServiceAPI.vbproj">
+      <Project>{4e00515b-4230-4ca4-ac11-2045e0e58b01}</Project>
+      <Name>RateServiceAPI</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

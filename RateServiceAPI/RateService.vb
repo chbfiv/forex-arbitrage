@@ -227,7 +227,7 @@ Namespace Gain.RateService
 
                 ' Send the Authentication Key down the socket stream
                 Dim AuthMessage As String
-                AuthMessage = _Key & "\COMPACT"
+                AuthMessage = _Key & "\r\n"
                 socket.Send(Encoding.ASCII.GetBytes(AuthMessage))
 
                 Console.Out.WriteLine("RateService:ProcessRatesFeed Sockect Authenication Sent")

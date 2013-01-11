@@ -23,6 +23,12 @@ using Matrix = Bluebit.MatrixLibrary.Matrix;
 using Vector = Bluebit.MatrixLibrary.Vector;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra.Double.Factorization;
+using System.Net;
+using System.IO;
+using System.Xml;
+using System.Xml.Linq;
+using System.Xml.XPath;
+using RateServiceAPI.Gain.RateService;
 
 namespace forex_arbitrage
 {
@@ -47,6 +53,7 @@ namespace forex_arbitrage
         #region Fields
 
         private Tws m_tws = new Tws();
+        private GainCapitalClient m_forex = new GainCapitalClient();
         private Task m_task;
         private CancellationTokenSource m_taskToken = new CancellationTokenSource();
         private ForexTicker[,] m_tickers;
@@ -65,10 +72,25 @@ namespace forex_arbitrage
         private SortedSet<ArbitrageCycle> m_activeArbitrage = new SortedSet<ArbitrageCycle>();
         private SortedSet<ArbitrageCycle> m_historicalArbitrage = new SortedSet<ArbitrageCycle>();
         private SortedSet<ArbitrageCycle> m_watchArbitrage = new SortedSet<ArbitrageCycle>();
+        private List<ArbitrageCycle> m_stasisArbitrage = new List<ArbitrageCycle>();
 
         public const int NO_SECURITY_DEF_FOUND = 200;
         public const int TEST_ARBITRAGE_SIZE = 6;
         public const double LAMBDA_MAX = 6.0221;
+
+        // forex.com
+
+        public const string FOREX_AUTH_URL = "https://demoweb.efxnow.com/gaincapitalwebservices/authenticate/authenticationservice.asmx";
+        public const string FOREX_AUTH_ACTION = "www.GainCapital.com.WebServices/AuthenticateCredentialsWithBrandCode";
+        public const string FOREX_AUTH_XML = "Forex.AuthenticateCredentialsWithBrandCode.xml";
+        public const string FOREX_CONFIG_URL = "https://demoweb.efxnow.com/gaincapitalwebservices/Configuration/ConfigurationService.asmx";
+        public const string FOREX_CONFIG_ACTION = "www.GainCapital.com.WebServices/GetConfigurationSettings";
+        public const string FOREX_CONFIG_XML = "Forex.GetConfigurationSettings.xml";
+        public const string FOREX_HOST = "demorates.efxnow.com";
+        public const string FOREX_BRAND_CODE = "FRXC";
+        public const int FOREX_PORT = 443;
+        public const string FOREX_USER_ID = "chbfiv@gmail.com";
+        public const string FOREX_PASS = "forex2012";
 
         #endregion
 
@@ -144,6 +166,10 @@ namespace forex_arbitrage
             myGrid.Visibility = Visibility.Hidden;
 
             FillTestData();
+
+            // forex.com
+
+            InitForexDotCom();
         }
 
         private DateTime m_currentTime = DateTime.Now;
@@ -153,6 +179,192 @@ namespace forex_arbitrage
             m_currentTime = new DateTime(time);
             m_currentTime = new DateTime(1970, 1, 1, 0, 0, 0, 0);
             m_currentTime = m_currentTime.AddSeconds(time).ToLocalTime();
+        }
+
+        #endregion
+
+        #region Forex.com
+
+        private void InitForexDotCom()
+        {
+            try
+            {
+                m_forex.Connected += m_forex_Connected;
+
+                XNamespace xsi = "http://www.w3.org/2001/XMLSchema-instance";
+                XNamespace xsd = "http://www.w3.org/2001/XMLSchema";
+                XNamespace soap = "http://www.w3.org/2003/05/soap-envelope";
+                XNamespace gcws = "www.GainCapital.com.WebServices";
+                
+                string body;
+
+                XDocument authRequestXml = XDocument.Load(FOREX_AUTH_XML);
+                HttpWebRequest authRequest = CreateWebRequest(FOREX_AUTH_URL, FOREX_AUTH_ACTION);
+                InsertSoapEnvelopeIntoWebRequest(authRequestXml, authRequest);
+
+                using (HttpWebResponse response = (HttpWebResponse)authRequest.GetResponse())
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (Stream s = response.GetResponseStream())
+                    {
+                        s.CopyTo(ms);
+                        body = Encoding.UTF8.GetString(ms.ToArray());
+                    }
+                }
+
+                StringReader authBosySr = new StringReader(body);
+                XDocument authResponseXml = XDocument.Load(authBosySr);
+
+                XElement authSuccess = authResponseXml.Root.Descendants(gcws + "success").FirstOrDefault();
+
+                if (bool.Parse(authSuccess.Value))
+                {
+                    XElement token = authResponseXml.Root.Descendants(gcws + "token").FirstOrDefault();
+                    m_forex.Connect(FOREX_HOST, FOREX_PORT, token.Value);
+                }
+                    /*
+                    XDocument configRequestXml = XDocument.Load(FOREX_CONFIG_XML);
+                    XElement configToken = configRequestXml.Root.Descendants(gcws + "Token").FirstOrDefault();
+                    configToken.Value = token.Value;
+                    HttpWebRequest configRequest = CreateWebRequest(FOREX_CONFIG_URL, FOREX_CONFIG_ACTION);
+                    InsertSoapEnvelopeIntoWebRequest(configRequestXml, configRequest);
+
+                    using (HttpWebResponse response = (HttpWebResponse)configRequest.GetResponse())
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        using (Stream s = response.GetResponseStream())
+                        {
+                            s.CopyTo(ms);
+                            body = Encoding.UTF8.GetString(ms.ToArray());
+                        }
+                    }
+
+                    StringReader configBosySr = new StringReader(body);
+                    XDocument configResponseXml = XDocument.Load(authBosySr);
+
+                    XElement configSuccess = configResponseXml.Root.Descendants(gcws + "Success").FirstOrDefault();
+
+                    if (bool.Parse(configSuccess.Value))
+                    {
+                        foreach (XElement service in authResponseXml.Root.Descendants(gcws + "Service"))
+                        {
+
+                        }
+
+                        m_rateService.OnRateServiceConnected += m_rateService_OnRateServiceConnected;
+                        m_rateService.OnRateServiceConnectionFailed += m_rateService_OnRateServiceConnectionFailed;
+                        m_rateService.OnRateServiceConnectionLost += m_rateService_OnRateServiceConnectionLost;
+                        m_rateService.OnRateServiceDisconnected += m_rateService_OnRateServiceDisconnected;
+                        m_rateService.OnRateServiceRate += m_rateService_OnRateServiceRate;
+
+                        if (m_rateService.Connect(FOREX_HOST, FOREX_PORT, token.Value))
+                        {
+
+                        }
+                    }
+                }*/                
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex.Message);
+            }
+        }
+
+        private void m_forex_Connected(IPEndPoint endpoint)
+        {
+            ForexConnected();
+        }
+
+        private void client_RateTick(int id, DateTime dt, double bid, double ask, double price, bool dealable)
+        {
+            int i = id & 0xFFFF;
+            int j = (id >> 16) & 0xFFFF;
+
+            Dispatcher.Invoke(() =>
+            {
+                ForexTicker ticker = m_tickers[i, j];
+                if (ticker != null)
+                {
+                    ticker.Price = price;
+                }
+
+                ticker = m_tickers[j, i];
+                if (ticker != null)
+                {
+                    ticker.Price = price;
+                }
+            });
+        }
+
+        private static HttpWebRequest CreateWebRequest(string url, string action)
+        {
+            HttpWebRequest webRequest = (HttpWebRequest)WebRequest.Create(url);
+            webRequest.Headers.Add("SOAPAction", action);
+            webRequest.ContentType = "text/xml;charset=\"utf-8\"";
+            webRequest.Accept = "text/xml";
+            webRequest.Method = "POST";
+            return webRequest;
+        }
+
+        private static XmlDocument CreateSoapEnvelope()
+        {
+            XmlDocument soapEnvelop = new XmlDocument();
+            soapEnvelop.LoadXml(@"<SOAP-ENV:Envelope xmlns:SOAP-ENV=""http://schemas.xmlsoap.org/soap/envelope/"" xmlns:xsi=""http://www.w3.org/1999/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/1999/XMLSchema""><SOAP-ENV:Body><HelloWorld xmlns=""http://tempuri.org/"" SOAP-ENV:encodingStyle=""http://schemas.xmlsoap.org/soap/encoding/""><int1 xsi:type=""xsd:integer"">12</int1><int2 xsi:type=""xsd:integer"">32</int2></HelloWorld></SOAP-ENV:Body></SOAP-ENV:Envelope>");
+            return soapEnvelop;
+        }
+
+        private static void InsertSoapEnvelopeIntoWebRequest(XDocument soapEnvelopeXml, HttpWebRequest webRequest)
+        {
+            using (Stream stream = webRequest.GetRequestStream())
+            {
+                soapEnvelopeXml.Save(stream);
+            }
+        }
+
+        private void ForexConnected()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                m_forex.RateTick += client_RateTick;
+
+                Status("Connected to Forex server.");
+                myGrid.Visibility = Visibility.Visible;
+                networkStatus.Text = "Online";
+
+                if (m_task != null)
+                {
+                    m_taskToken.Cancel();
+                    m_taskToken = new CancellationTokenSource();
+                }
+
+                m_task = Task.Factory.StartNew(ForexWhileConnectedTick, m_taskToken.Token);
+
+                RequestMarketData(Currencies.USD, Currencies.EUR, Currencies.JPY, Currencies.GBP, Currencies.AUD, Currencies.CHF, Currencies.CAD);
+            });
+        }
+
+        private void ForexWhileConnectedTick()
+        {
+            try
+            {
+                SetupArbitrage();
+
+                while (m_forex.IsConnected)
+                {
+                    m_currentTime = DateTime.Now;
+
+                    CalulateArbitrage();
+
+                    Thread.Sleep(1000);
+                }
+
+                m_taskToken.Cancel();
+                Disconnected(false);
+            }
+            catch (Exception ex)
+            {
+                StatusError(ex.Message);
+            }
         }
 
         #endregion
@@ -384,6 +596,7 @@ namespace forex_arbitrage
                             m_watchArbitrage.Add(c);
                         }
 
+                        /*
                         for (int l = 0; l < currencyCount; l++)
                         {
                             int forth = l;
@@ -453,10 +666,21 @@ namespace forex_arbitrage
                                     m_watchArbitrage.Add(c);
                                 }
                             }
-                        }
+                        }*/
                     }
                 }
             }
+        }
+
+        private void FillStasisArbitrage()
+        {
+            //int offset = 0;
+            //ArbitrageCycle c = new ArbitrageCycle(DateTime.Now);
+            //c.Edges.Add(new DirectedEdge(Currencies.USD, Currencies.JPY, offset++));
+            //c.Edges.Add(new DirectedEdge(Currencies.JPY, Currencies.AUD, offset++));
+            //c.Edges.Add(new DirectedEdge(Currencies.AUD, Currencies.CAD, offset++));
+            //c.Edges.Add(new DirectedEdge(Currencies.CAD, Currencies.USD, offset++));
+            //m_stasisArbitrage.Add(c);
         }
 
         private void m_tws_updateMktDepthL2(int id, int position, string marketMaker, int operation, int side, double price, int size)
@@ -499,7 +723,7 @@ namespace forex_arbitrage
                 m_tws.connect(win.Host, win.Port, win.ClientId);
                 if (m_tws.serverVersion > 0)
                 {
-                    Connected();
+                    TwsConnected();
                 }
                 else
                 {
@@ -511,8 +735,17 @@ namespace forex_arbitrage
         private void File_Test_Clicked(object sender, RoutedEventArgs e)
         {
             CalulateTestArbitrage();
-        }        
+        }
 
+        /*  This is the security type. Valid values are:
+            STK
+            OPT
+            FUT
+            IND
+            FOP
+            CASH
+            BAG
+         */
         private void RequestMarketData(params Currencies[] symbols)
         {
             m_tickers = new ForexTicker[symbols.Length, symbols.Length];
@@ -560,22 +793,13 @@ namespace forex_arbitrage
                         myGrid.Children.Add(ticker);                        
                         m_tickers[i,j] = ticker;
 
-                        if (ticker.IsNormalized) m_tws.reqMktData2(ticker.Id, ticker.LocalSymbol, "CASH", "SMART", "IDEALPRO", ticker.LocalCurrency, Contract.GENERIC_TICK_TAGS, 0);
+                        if (m_tws.serverVersion > 0)
+                        {
+                            if (ticker.IsNormalized) m_tws.reqMktData2(ticker.Id, ticker.LocalSymbol, "CASH", "SMART", "IDEALPRO", ticker.LocalCurrency, Contract.GENERIC_TICK_TAGS, 0);
+                        }
                     }
                 }
-            }
-
-            /*This is the security type. Valid values are:
-STK
-OPT
-FUT
-IND
-FOP
-CASH
-BAG*/
-            
-            //m_tws.reqMktData(++i, symbol, "STK", String.Empty, 0, String.Empty, String.Empty, "SMART", "ISLAND", "USD", Contract.GENERIC_TICK_TAGS, 0);
-            
+            }            
         }
 
         private void m_tws_tickPrice(int id, int tickType, double price, int canAutoExecute)
@@ -596,7 +820,7 @@ BAG*/
             }
         }
 
-        private void WhileConnectedTick()
+        private void TwsWhileConnectedTick()
         {
             try
             {
@@ -647,7 +871,7 @@ BAG*/
             });
         }
 
-        private void Connected()
+        private void TwsConnected()
         {
             Dispatcher.Invoke(() =>
             {
@@ -661,7 +885,7 @@ BAG*/
                     m_taskToken = new CancellationTokenSource();
                 }
 
-                m_task = Task.Factory.StartNew(WhileConnectedTick, m_taskToken.Token);
+                m_task = Task.Factory.StartNew(TwsWhileConnectedTick, m_taskToken.Token);
 
                 RequestMarketData(Currencies.USD, Currencies.EUR, Currencies.JPY, Currencies.GBP, Currencies.AUD, Currencies.CHF, Currencies.CAD);
                 //RequestMarketData("USD", "EUR", "JPY", "GBP", "AUD", "CHF", "CAD");
@@ -702,6 +926,7 @@ BAG*/
         private void SetupArbitrage()
         {
             FillWatchArbitrage();
+            FillStasisArbitrage();
         }
 
         private void CalulateArbitrage()
@@ -978,6 +1203,42 @@ BAG*/
             {
                 for (int j = m_watchListBox.Items.Count - 1; j >= m_watchArbitrage.Count; j--)
                     m_watchListBox.Items.RemoveAt(j);
+            });
+
+            foreach (ArbitrageCycle c in m_activeArbitrage)
+            {
+                if (c.Profit > 0.05d && c.Profit < 1000 && !m_stasisArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                {
+                    m_stasisArbitrage.Add((ArbitrageCycle)c.Clone());
+                }
+            }
+
+            foreach (ArbitrageCycle c in m_watchArbitrage)
+            {
+                if (c.Profit > 0.05d && c.Profit < 1000 && !m_stasisArbitrage.Contains(c, ARBITRAGE_CYCLE_COMPARER))
+                {
+                    m_stasisArbitrage.Add((ArbitrageCycle)c.Clone());
+                }
+            }
+
+            IEnumerable<ArbitrageCycle> set2 = m_stasisArbitrage.AsEnumerable();
+            for (int i = 0; i < set2.Count(); i++)
+            {
+                ArbitrageCycle cycle = set2.ElementAt(i);
+
+                Dispatcher.Invoke(() =>
+                {
+                    if (m_stasisListBox.Items.Count > i)
+                        m_stasisListBox.Items[i] = cycle.Summary;
+                    else
+                        m_stasisListBox.Items.Add(cycle.Summary);
+                });
+            }
+
+            Dispatcher.Invoke(() =>
+            {
+                for (int j = m_stasisListBox.Items.Count - 1; j >= m_stasisArbitrage.Count; j--)
+                    m_stasisListBox.Items.RemoveAt(j);
             });
         }
 

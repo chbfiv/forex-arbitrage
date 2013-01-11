@@ -24,6 +24,14 @@ namespace forex_arbitrage
         JPY = 2,
         CHF = 3*/
             
+        /*USD = 0,
+        EUR = 1,
+        JPY = 2,
+        GBP = 3,
+        AUD = 4,
+        CHF = 5,
+        CAD = 6*/
+
         USD = 0,
         EUR = 1,
         JPY = 2,

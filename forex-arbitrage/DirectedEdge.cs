@@ -65,6 +65,13 @@ namespace forex_arbitrage
             m_weight = weight;
         }
 
+        public DirectedEdge(Currencies v, Currencies w, double weight)
+        {
+            m_v = (int)v;
+            m_w = (int)w;
+            m_weight = weight;
+        }
+
         #endregion
 
         #region Members

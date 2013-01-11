@@ -81,6 +81,12 @@
                             <ListBoxItem>USD.JPY > JPY.CHF > CHF.USD (0.02%)</ListBoxItem>
                         </ListBox>
                     </TabItem>
+                    <TabItem Header="Stasis">
+                        <ListBox x:Name="m_stasisListBox" ScrollViewer.VerticalScrollBarVisibility="Visible" MaxHeight="300">
+                            <ListBoxItem>USD.EUR > EUR.CHF > CHF.USD (0.01%)</ListBoxItem>
+                            <ListBoxItem>USD.JPY > JPY.CHF > CHF.USD (0.02%)</ListBoxItem>
+                        </ListBox>
+                    </TabItem>                    
                 </TabControl>
             </StackPanel>
         </Viewbox>
